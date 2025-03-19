@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="364ccf4f-019e-4eed-aa41-e8639c771d22" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="TypeScript File" />
+      </list>
+    </option>
+  </component>
+  <component name="GitToolBoxStore">
+    <option name="projectConfigVersion" value="5" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/node_modules/hono/dist/types/request.d.ts" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="2bkz0o7OSaMRBh64ZMaIjhb09YH" />
+  <component name="ProjectViewState">
+    <option name="autoscrollFromSource" value="true" />
+    <option name="autoscrollToSource" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="sortByType" value="true" />
+    <option name="sortKey" value="BY_TYPE" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;javascript.nodejs.core.library.configured.version&quot;: &quot;18.16.0&quot;,
+    &quot;javascript.nodejs.core.library.typings.version&quot;: &quot;18.16.20&quot;,
+    &quot;js.linters.configure.manually.selectedeslint&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/roopi/work/truto-test-api/truto-do/src&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.standard&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;/Users/roopi/work/truto-test-api/node_modules/eslint&quot;,
+    &quot;node.js.selected.package.standard&quot;: &quot;&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_interpreter_path&quot;: &quot;node&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;yarn&quot;,
+    &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;/Users/roopi/work/truto-test-api/node_modules/prettier&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;settings.nodejs&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Users/roopi/work/truto-test-api/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File&quot;: [
+      &quot;JSON&quot;
+    ]
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/truto-do/src" />
+      <recent name="$PROJECT_DIR$/truto-do" />
+      <recent name="$PROJECT_DIR$/src/data" />
+      <recent name="$PROJECT_DIR$" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/truto-do/src" />
+      <recent name="$PROJECT_DIR$/truto-api" />
+    </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-WS-243.26053.12" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="364ccf4f-019e-4eed-aa41-e8639c771d22" name="Changes" comment="" />
+      <created>1706773643878</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1706773643878</updated>
+      <workItem from="1706773644965" duration="9524000" />
+      <workItem from="1707209360620" duration="6588000" />
+      <workItem from="1707315637915" duration="664000" />
+      <workItem from="1707324910911" duration="1229000" />
+      <workItem from="1707459888132" duration="3769000" />
+      <workItem from="1708885613373" duration="2057000" />
+      <workItem from="1708931130919" duration="32000" />
+      <workItem from="1708931175799" duration="539000" />
+      <workItem from="1710414960941" duration="1971000" />
+      <workItem from="1710683458127" duration="599000" />
+      <workItem from="1710685743159" duration="2528000" />
+      <workItem from="1712644737852" duration="4123000" />
+      <workItem from="1712726562098" duration="103000" />
+      <workItem from="1712813897880" duration="603000" />
+      <workItem from="1712857396985" duration="862000" />
+      <workItem from="1713191064878" duration="592000" />
+      <workItem from="1714465679583" duration="3405000" />
+      <workItem from="1714496243242" duration="7000" />
+      <workItem from="1714496861328" duration="4658000" />
+      <workItem from="1714717279711" duration="1803000" />
+      <workItem from="1714986192177" duration="16141000" />
+      <workItem from="1715250776206" duration="15562000" />
+      <workItem from="1716464590460" duration="1613000" />
+      <workItem from="1716897548301" duration="1953000" />
+      <workItem from="1718180504994" duration="4828000" />
+      <workItem from="1718874143637" duration="671000" />
+      <workItem from="1719224308263" duration="7629000" />
+      <workItem from="1720777863891" duration="42000" />
+      <workItem from="1721049758355" duration="1362000" />
+      <workItem from="1721220733793" duration="3023000" />
+      <workItem from="1721387639031" duration="17997000" />
+      <workItem from="1721804556988" duration="2263000" />
+      <workItem from="1721904668955" duration="4843000" />
+      <workItem from="1722499348238" duration="8137000" />
+      <workItem from="1722613935043" duration="4824000" />
+      <workItem from="1723452958925" duration="2741000" />
+      <workItem from="1723817207706" duration="2500000" />
+      <workItem from="1723978181635" duration="609000" />
+      <workItem from="1724234153805" duration="6664000" />
+      <workItem from="1724314263585" duration="7855000" />
+      <workItem from="1724352035076" duration="3063000" />
+      <workItem from="1724417060750" duration="1292000" />
+      <workItem from="1724684723887" duration="5249000" />
+      <workItem from="1725344959121" duration="1573000" />
+      <workItem from="1725350573651" duration="4282000" />
+      <workItem from="1729003217125" duration="4196000" />
+      <workItem from="1729170845954" duration="290000" />
+      <workItem from="1730190971874" duration="7192000" />
+      <workItem from="1742371080505" duration="2688000" />
+      <workItem from="1742385501999" duration="23000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

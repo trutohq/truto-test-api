@@ -1,0 +1,18 @@
+{
+  "name": "truto-test-api",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "create-org": "bun run src/cli/create-org.ts",
+    "create-api-key": "bun run src/cli/create-api-key.ts",
+    "migrate": "bun run src/cli/migrate.ts",
+    "nuke-db": "bun run src/cli/nuke-db.ts"
+  },
+  "dependencies": {
+    "hono": "4.7.4",
+    "lodash-es": "4.17.21"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/lodash-es": "4.17.12"
+  }
+}
