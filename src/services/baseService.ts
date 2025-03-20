@@ -1,6 +1,7 @@
 import { Database } from 'bun:sqlite';
 import { BaseEntity, PaginatedResponse } from '../types';
 import { createPaginatedResponse, decodeCursor } from '../utils';
+import { convertDatesToISO, convertDatesToSQLite } from '../utils/dates';
 
 export type BaseListOptions = {
   cursor?: string;
@@ -43,15 +44,20 @@ export abstract class BaseService<T extends BaseEntity> {
       LIMIT ?
     `).all(...params) as unknown[];
 
-    return createPaginatedResponse(items as T[], limit, cursor);
+    // Convert dates to ISO format
+    const convertedItems = items.map(item => convertDatesToISO(item as T));
+    return createPaginatedResponse(convertedItems as T[], limit, cursor);
   }
 
   async getById(id: number): Promise<T | undefined> {
-    return this.db.query(`SELECT * FROM ${this.tableName} WHERE ${this.idColumn} = ?`).get(id) as T | undefined;
+    const item = this.db.query(`SELECT * FROM ${this.tableName} WHERE ${this.idColumn} = ?`).get(id) as T | undefined;
+    return item ? convertDatesToISO(item) : undefined;
   }
 
   async create(data: Partial<T>): Promise<T> {
-    const id = await this.createRecord(data);
+    // Convert dates to SQLite format before creating
+    const sqliteData = convertDatesToSQLite(data);
+    const id = await this.createRecord(sqliteData);
     const item = await this.getById(id);
     if (!item) {
       throw new Error(`Failed to create ${this.tableName}`);
@@ -60,7 +66,9 @@ export abstract class BaseService<T extends BaseEntity> {
   }
 
   async update(id: number, data: Partial<T>): Promise<T | undefined> {
-    const updatedId = await this.updateRecord(id, data);
+    // Convert dates to SQLite format before updating
+    const sqliteData = convertDatesToSQLite(data);
+    const updatedId = await this.updateRecord(id, sqliteData);
     if (!updatedId) {
       return undefined;
     }

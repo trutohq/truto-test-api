@@ -1,6 +1,7 @@
 import { BaseService } from '../services/baseService';
 import { PaginatedResponse, Ticket, CreateTicket, UpdateTicket, TicketStatus, TicketPriority } from '../types';
 import { createPaginatedResponse, decodeCursor } from '../utils';
+import { getCurrentSQLiteTimestamp } from '../utils/dates';
 
 type ListTicketsOptions = {
   cursor?: string;
@@ -18,7 +19,7 @@ export class TicketsService extends BaseService<Ticket> {
 
   async create(data: CreateTicket): Promise<Ticket> {
     const status = data.status || 'open';
-    const now = new Date().toISOString();
+    const now = getCurrentSQLiteTimestamp();
 
     return super.create({
       ...data,
@@ -34,7 +35,7 @@ export class TicketsService extends BaseService<Ticket> {
     
     // If status is being changed to closed, set closed_at
     if (data.status === 'closed') {
-      updates.closed_at = new Date().toISOString();
+      updates.closed_at = getCurrentSQLiteTimestamp();
     } else if (data.status === 'open') {
       updates.closed_at = null;
     }

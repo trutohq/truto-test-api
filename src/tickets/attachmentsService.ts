@@ -3,6 +3,7 @@ import { PaginatedResponse, Attachment, CreateAttachment } from '../types';
 import { createPaginatedResponse, decodeCursor } from '../utils';
 import { join } from 'path';
 import { mkdir } from 'fs/promises';
+import { getCurrentSQLiteTimestamp } from '../utils/dates';
 
 type ListAttachmentsOptions = {
   cursor?: string;
@@ -32,8 +33,8 @@ export class AttachmentsService extends BaseService<Attachment> {
   }
 
   private getFilePath(organizationId: number, fileName: string): string {
-    // Create a unique file name to avoid collisions
-    const timestamp = Date.now();
+    // Create a unique file name to avoid collisions using current timestamp
+    const timestamp = getCurrentSQLiteTimestamp().replace(/[- :]/g, '');
     const uniqueFileName = `${timestamp}-${fileName}`;
     return join(this.uploadsDir, organizationId.toString(), uniqueFileName);
   }
