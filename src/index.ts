@@ -25,6 +25,16 @@ app.get('/', (c) => {
 })
 
 // OpenAPI schema route (public access)
+app.use(
+  '/schema/*',
+  cors({
+    origin: '*',
+    allowMethods: ['GET', 'HEAD', 'OPTIONS'],
+    allowHeaders: ['Content-Type'],
+    exposeHeaders: ['Content-Type'],
+    maxAge: 86400,
+  }),
+)
 app.get('/schema/openapi.yml', async (c) => {
   try {
     const schemaPath = path.join(process.cwd(), 'openapi.yml')
