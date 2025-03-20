@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { OrganizationsService } from './organizationsService';
 import { User } from '../types';
+import db from '../config/database';
 
 type Context = {
   Variables: {
@@ -10,7 +11,7 @@ type Context = {
 };
 
 const router = new Hono<Context>();
-const organizationsService = new OrganizationsService();
+const organizationsService = new OrganizationsService(db);
 
 // List organizations (returns user's organization)
 router.get('/', async (c) => {

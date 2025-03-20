@@ -1,4 +1,4 @@
-import db from '../config/database';
+import { BaseService } from '../services/baseService';
 import { generateApiKey } from '../utils';
 
 export interface ApiKey {
@@ -10,12 +10,13 @@ export interface ApiKey {
   last_used_at: string | null;
 }
 
-export class ApiKeyService {
-  private tableName = 'api_keys';
+export class ApiKeyService extends BaseService<ApiKey> {
+  protected tableName = 'api_keys';
+  protected idColumn = 'id';
 
-  async create(userId: number): Promise<ApiKey> {
+  async createForUser(userId: number): Promise<ApiKey> {
     const apiKey = generateApiKey();
-    const result = db.query(`
+    const result = this.query(`
       INSERT INTO ${this.tableName} (user_id, key, created_at, updated_at)
       VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING *
@@ -29,14 +30,33 @@ export class ApiKeyService {
   }
 
   async getByKey(key: string): Promise<ApiKey | undefined> {
-    return db.query(`
+    return this.query(`
       SELECT * FROM ${this.tableName}
       WHERE key = ?
     `).get(key) as ApiKey | undefined;
   }
 
+  async getUserIdByKey(key: string): Promise<number | undefined> {
+    const result = this.query(`
+      SELECT user_id 
+      FROM ${this.tableName} 
+      WHERE key = ?
+    `).get(key) as { user_id: number } | undefined;
+
+    if (result) {
+      // Update last used timestamp
+      this.query(`
+        UPDATE ${this.tableName} 
+        SET last_used_at = CURRENT_TIMESTAMP 
+        WHERE key = ?
+      `).run(key);
+    }
+
+    return result?.user_id;
+  }
+
   async getByUserId(userId: number): Promise<ApiKey[]> {
-    return db.query(`
+    return this.query(`
       SELECT * FROM ${this.tableName}
       WHERE user_id = ?
       ORDER BY created_at DESC
@@ -44,7 +64,7 @@ export class ApiKeyService {
   }
 
   async delete(id: number): Promise<boolean> {
-    const result = db.query(`
+    const result = this.query(`
       DELETE FROM ${this.tableName}
       WHERE id = ?
     `).run(id);

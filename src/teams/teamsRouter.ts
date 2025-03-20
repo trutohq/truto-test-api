@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { TeamsService } from './teamsService';
 import { User } from '../types';
+import db from '../config/database';
 
 type Context = {
   Variables: {
@@ -10,7 +11,7 @@ type Context = {
 };
 
 const router = new Hono<Context>();
-const teamsService = new TeamsService();
+const teamsService = new TeamsService(db);
 
 // List teams (scoped to organization)
 router.get('/', async (c) => {

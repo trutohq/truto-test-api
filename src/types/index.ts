@@ -49,4 +49,23 @@ export interface Team extends BaseEntity {
   name: string;
   organization_id: number;
   members: User[];
+}
+
+export interface ContactEmail extends BaseEntity {
+  contact_id: number;
+  email: string;
+  is_primary: boolean;
+}
+
+export interface ContactPhone extends BaseEntity {
+  contact_id: number;
+  phone: string;
+  is_primary: boolean;
+}
+
+export interface Contact extends BaseEntity {
+  name: string;
+  organization_id: number;
+  emails: ContactEmail[];
+  phones: ContactPhone[];
 } 

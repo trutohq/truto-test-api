@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { UsersService } from './usersService';
 import { User } from '../types';
+import db from '../config/database';
 
 type Context = {
   Variables: {
@@ -10,7 +11,7 @@ type Context = {
 };
 
 const router = new Hono<Context>();
-const usersService = new UsersService();
+const usersService = new UsersService(db);
 
 // Get current user
 router.get('/me', async (c) => {

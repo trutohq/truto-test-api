@@ -1,4 +1,4 @@
-import db from '../config/database';
+import { Database } from 'bun:sqlite';
 import { BaseEntity, PaginatedResponse } from '../types';
 import { createPaginatedResponse, decodeCursor } from '../utils';
 
@@ -10,9 +10,14 @@ export type BaseListOptions = {
 export abstract class BaseService<T extends BaseEntity> {
   protected abstract tableName: string;
   protected idColumn = 'id';
+  protected db: Database;
+
+  constructor(db: Database) {
+    this.db = db;
+  }
 
   protected query(sql: string) {
-    return db.query(sql);
+    return this.db.query(sql);
   }
 
   protected parseJsonFields<T>(row: any, fields: string[]): T {
@@ -42,7 +47,7 @@ export abstract class BaseService<T extends BaseEntity> {
   }
 
   async getById(id: number): Promise<T | undefined> {
-    return db.query(`SELECT * FROM ${this.tableName} WHERE ${this.idColumn} = ?`).get(id) as T | undefined;
+    return this.db.query(`SELECT * FROM ${this.tableName} WHERE ${this.idColumn} = ?`).get(id) as T | undefined;
   }
 
   async create(data: Partial<T>): Promise<T> {
@@ -67,7 +72,7 @@ export abstract class BaseService<T extends BaseEntity> {
     const values = Object.values(data);
     const placeholders = values.map(() => '?').join(', ');
 
-    const result = db.query(`
+    const result = this.db.query(`
       INSERT INTO ${this.tableName} (${columns.join(', ')})
       VALUES (${placeholders})
       RETURNING id
@@ -96,7 +101,7 @@ export abstract class BaseService<T extends BaseEntity> {
 
     values.push(id);
     
-    const result = db.query(`
+    const result = this.db.query(`
       UPDATE ${this.tableName} 
       SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
       WHERE ${this.idColumn} = ?
@@ -107,7 +112,7 @@ export abstract class BaseService<T extends BaseEntity> {
   }
 
   async delete(id: number): Promise<boolean> {
-    const result = db.query(`DELETE FROM ${this.tableName} WHERE ${this.idColumn} = ?`).run(id);
+    const result = this.db.query(`DELETE FROM ${this.tableName} WHERE ${this.idColumn} = ?`).run(id);
     return result.changes > 0;
   }
 } 

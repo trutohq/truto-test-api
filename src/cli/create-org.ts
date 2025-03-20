@@ -1,12 +1,13 @@
 import { OrganizationsService } from '../organizations/organizationsService';
 import { UsersService } from '../users/usersService';
 import { ApiKeyService } from '../apiKeys/apiKeyService';
+import db from '../config/database';
+
+const organizationsService = new OrganizationsService(db);
+const usersService = new UsersService(db);
+const apiKeyService = new ApiKeyService(db);
 
 async function createOrg() {
-  const organizationsService = new OrganizationsService();
-  const usersService = new UsersService();
-  const apiKeyService = new ApiKeyService();
-
   // Get organization details from command line
   const orgName = process.argv[2];
   const orgSlug = process.argv[3];
@@ -37,8 +38,14 @@ async function createOrg() {
     console.log('Created user:', user);
 
     // Create API key
-    const apiKey = await apiKeyService.create(user.id);
-    console.log('\nAPI Key:', apiKey.key);
+    try {
+      const apiKey = await apiKeyService.createForUser(user.id);
+      console.log('API key created:', apiKey.key);
+    } catch (error) {
+      console.error('Failed to create API key:', error);
+      process.exit(1);
+    }
+
     console.log('\nSetup completed successfully!');
   } catch (error) {
     console.error('Setup failed:', error);

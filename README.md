@@ -1,3 +1,7 @@
+# Truto Ticketing Sandbox REST API
+
+Built using Bun.sh and Hono.dev
+
 To install dependencies:
 ```sh
 bun install
@@ -10,9 +14,11 @@ bun run dev
 
 open http://localhost:3000
 
+## Structure
+
 So this is going to be a very simple REST API for a ticketing system. The main purpose of this API is to be used by the Truto team for testing out their integrations and unified APIs.
 
-## Entities
+### Entities
 
 We can have the following entities in the ticketing system
 
@@ -28,23 +34,23 @@ We can use bun.sh SQLite module documented here - https://bun.sh/docs/api/sqlite
 
 Give a CLI command to create an org and its first user.
 
-## Authentication
+### Authentication
 
 API Key based authentication
 
 Give a CLI command to create an API key for a user.
 
-## Authorization
+### Authorization
 
-Bearer token based authorization
+Bearer token based authorization. Pass the x-api-key header.
 
-## Rate limit
+### Rate limit
 
 Rate limit the API calls to 5 per second. Use x-ratelimit-limit, x-ratelimit-remaining, and x-ratelimit-reset (number of seconds) and add retry-after header.
 
 The rate limit is enforced on an API key level.
 
-## Pagination
+### Pagination
 
 The pagination will be cursor based and the response format will be 
 
@@ -59,11 +65,11 @@ The pagination will be cursor based and the response format will be
     prev_cursor: "" // base64encoded
 }
 
-## Response format
+### Response format
 
 For list, the response is shown above with pagination. For other CRUD methods, its just a JSON object
 
-## Methods
+### Methods
 
 Every entity will have CRUD endpoints,
 

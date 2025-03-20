@@ -6,6 +6,7 @@ import { rateLimit, authenticate, errorHandler } from './middleware'
 import organizationsRouter from './organizations/organizationsRouter'
 import usersRouter from './users/usersRouter'
 import teamsRouter from './teams/teamsRouter'
+import contactsRouter from './contacts/contactsRouter'
 
 // Initialize the app
 const app = new Hono()
@@ -31,6 +32,9 @@ app.route('/users', usersRouter)
 
 // Mount teams routes
 app.route('/teams', teamsRouter)
+
+// Mount contacts routes
+app.route('/contacts', contactsRouter)
 
 // Start the server
 const port = process.env.PORT || 3000

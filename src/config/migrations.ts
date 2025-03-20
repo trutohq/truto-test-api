@@ -89,4 +89,54 @@ db.run(`
 
 db.run(`
   CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON team_members(user_id)
+`);
+
+// Create contacts table
+db.run(`
+  CREATE TABLE IF NOT EXISTS contacts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    organization_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+  )
+`);
+
+// Create contact_emails table
+db.run(`
+  CREATE TABLE IF NOT EXISTS contact_emails (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contact_id INTEGER NOT NULL,
+    email TEXT NOT NULL,
+    is_primary BOOLEAN NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE,
+    UNIQUE(email, contact_id)
+  )
+`);
+
+// Create index on contact_emails.email for smart merge lookups
+db.run(`
+  CREATE INDEX IF NOT EXISTS idx_contact_emails_email ON contact_emails(email)
+`);
+
+// Create contact_phones table
+db.run(`
+  CREATE TABLE IF NOT EXISTS contact_phones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contact_id INTEGER NOT NULL,
+    phone TEXT NOT NULL,
+    is_primary BOOLEAN NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE,
+    UNIQUE(phone, contact_id)
+  )
+`);
+
+// Create index on contact_phones.phone for smart merge lookups
+db.run(`
+  CREATE INDEX IF NOT EXISTS idx_contact_phones_phone ON contact_phones(phone)
 `); 

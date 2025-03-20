@@ -3,10 +3,12 @@ import { HTTPException } from 'hono/http-exception';
 import db from '../config/database';
 import { RateLimit } from '../types';
 import { UsersService } from '../users/usersService';
+import { ApiKeyService } from '../apiKeys/apiKeyService';
 
 // Rate limiting configuration
 const RATE_LIMIT = 5; // requests per second
-const usersService = new UsersService();
+const usersService = new UsersService(db);
+const apiKeyService = new ApiKeyService(db);
 
 export async function rateLimit(c: Context, next: Next) {
   const apiKey = c.req.header('x-api-key');
@@ -71,26 +73,18 @@ export async function authenticate(c: Context, next: Next) {
   }
 
   // Find user by API key
-  const userWithKey = db.query(`
-    SELECT user_id 
-    FROM api_keys 
-    WHERE key = ?
-  `).get(apiKey) as { user_id: number } | undefined;
-
-  if (!userWithKey) {
+  const userId = await apiKeyService.getUserIdByKey(apiKey);
+  if (!userId) {
     throw new HTTPException(401, { message: 'Invalid API key' });
   }
 
-  // Get complete user information using the service
-  const user = await usersService.getById(userWithKey.user_id);
+  // Get user details
+  const user = await usersService.getById(userId);
   if (!user) {
     throw new HTTPException(401, { message: 'User not found' });
   }
 
-  // Update last used timestamp
-  db.query('UPDATE api_keys SET last_used_at = CURRENT_TIMESTAMP WHERE key = ?').run(apiKey);
-
-  // Add user to context
+  // Set user in context
   c.set('user', user);
 
   await next();

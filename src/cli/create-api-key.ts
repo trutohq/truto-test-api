@@ -1,10 +1,11 @@
 import { UsersService } from '../users/usersService';
 import { ApiKeyService } from '../apiKeys/apiKeyService';
+import db from '../config/database';
+
+const usersService = new UsersService(db);
+const apiKeyService = new ApiKeyService(db);
 
 async function createApiKey() {
-  const usersService = new UsersService();
-  const apiKeyService = new ApiKeyService();
-
   // Get user email from command line
   const userEmail = process.argv[2];
 
@@ -22,9 +23,8 @@ async function createApiKey() {
     }
 
     // Create API key
-    const apiKey = await apiKeyService.create(user.id);
-    console.log('\nAPI Key:', apiKey.key);
-    console.log('\nAPI key created successfully!');
+    const apiKey = await apiKeyService.createForUser(user.id);
+    console.log('API key created:', apiKey.key);
   } catch (error) {
     console.error('Failed to create API key:', error);
     process.exit(1);
