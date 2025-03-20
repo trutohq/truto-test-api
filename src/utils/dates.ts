@@ -12,6 +12,15 @@ type DateColumns = (typeof SQLITE_DATETIME_COLUMNS)[number]
 const SQLITE_FORMAT = 'yyyy-MM-dd HH:mm:ss'
 
 /**
+ * Generates a random date between start and end dates in SQLite format
+ */
+export function randomDate(start: DateTime, end: DateTime): string {
+  const diffMillis = end.toMillis() - start.toMillis()
+  const randomMillis = Math.floor(Math.random() * diffMillis)
+  return start.plus({ milliseconds: randomMillis }).toFormat(SQLITE_FORMAT)
+}
+
+/**
  * Converts an ISO 8601 date string to SQLite datetime format
  * @param isoDate ISO 8601 date string
  * @returns SQLite datetime string or null if input is null/undefined
