@@ -10,9 +10,40 @@ import contactsRouter from './contacts/contactsRouter'
 import ticketsRouter from './tickets/ticketsRouter'
 import commentsRouter from './tickets/commentsRouter'
 import attachmentsRouter from './tickets/attachmentsRouter'
+import * as path from 'node:path'
 
 // Initialize the app
 const app = new Hono()
+
+// Health check route
+app.get('/', (c) => {
+  return c.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    version: process.env.VERSION || '1.0.0',
+  })
+})
+
+// OpenAPI schema route (public access)
+app.get('/schema/openapi.yml', async (c) => {
+  try {
+    const schemaPath = path.join(process.cwd(), 'openapi.yml')
+    const file = Bun.file(schemaPath)
+    const exists = await file.exists()
+
+    if (!exists) {
+      return c.json({ message: 'Schema file not found' }, 404)
+    }
+
+    return new Response(file, {
+      headers: {
+        'Content-Type': 'application/yaml',
+      },
+    })
+  } catch (error) {
+    return c.json({ message: 'Error reading schema file' }, 500)
+  }
+})
 
 // Global middleware
 app.use('*', logger())
@@ -23,15 +54,6 @@ app.use('*', rateLimit)
 
 // Error handling
 app.onError(errorHandler)
-
-// Health check route
-app.get('/', (c) => {
-  return c.json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    version: process.env.VERSION || '1.0.0',
-  })
-})
 
 // Mount organization routes
 app.route('/organizations', organizationsRouter)

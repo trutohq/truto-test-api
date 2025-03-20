@@ -1,0 +1,742 @@
+openapi: 3.0.0
+info:
+  title: Truto Test API
+  version: '1.0.0'
+  description: API for managing organizations, users, teams, contacts, and tickets
+
+servers:
+  - url: https://truto-test-api.truto.one
+    description: Production server
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+    
+    Organization:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        organization_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, closed]
+        priority:
+          type: string
+          enum: [low, normal, high]
+        assignee_id:
+          type: integer
+        contact_id:
+          type: integer
+        organization_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PaginatedResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+        next_cursor:
+          type: string
+          nullable: true
+        prev_cursor:
+          type: string
+          nullable: true
+
+    Contact:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        organization_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+        content:
+          type: string
+        ticket_id:
+          type: integer
+        user_id:
+          type: integer
+        is_private:
+          type: boolean
+        organization_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Attachment:
+      type: object
+      properties:
+        id:
+          type: integer
+        filename:
+          type: string
+        content_type:
+          type: string
+        size:
+          type: integer
+        ticket_id:
+          type: integer
+        organization_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ContactCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        emails:
+          type: array
+          items:
+            type: object
+            required:
+              - email
+            properties:
+              email:
+                type: string
+                format: email
+              label:
+                type: string
+        phones:
+          type: array
+          items:
+            type: object
+            required:
+              - phone
+            properties:
+              phone:
+                type: string
+              label:
+                type: string
+
+    TicketCreate:
+      type: object
+      required:
+        - subject
+      properties:
+        subject:
+          type: string
+        description:
+          type: string
+        assignee_id:
+          type: integer
+        contact_id:
+          type: integer
+        priority:
+          type: string
+          enum: [low, normal, high]
+          default: normal
+
+    CommentCreate:
+      type: object
+      required:
+        - content
+        - ticket_id
+      properties:
+        content:
+          type: string
+        ticket_id:
+          type: integer
+        is_private:
+          type: boolean
+          default: false
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /:
+    get:
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Server health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+
+  /organizations:
+    get:
+      summary: List organizations (returns user's organization)
+      responses:
+        '200':
+          description: Successfully retrieved organizations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+        '401':
+          description: Unauthorized
+
+  /organizations/{id}:
+    get:
+      summary: Get a single organization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully retrieved organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Organization not found
+
+  /tickets:
+    get:
+      summary: List tickets
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: assignee_id
+          in: query
+          schema:
+            type: integer
+        - name: contact_id
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, closed]
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [low, normal, high]
+      responses:
+        '200':
+          description: Successfully retrieved tickets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+        '400':
+          description: Invalid parameters
+        '401':
+          description: Unauthorized
+
+    post:
+      summary: Create a new ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketCreate'
+      responses:
+        '201':
+          description: Successfully created ticket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+
+  /tickets/{id}:
+    put:
+      summary: Update a ticket
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketCreate'
+      responses:
+        '200':
+          description: Successfully updated ticket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          description: Invalid request body
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Ticket not found
+
+  /users/me:
+    get:
+      summary: Get current user
+      responses:
+        '200':
+          description: Successfully retrieved current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+
+  /users:
+    get:
+      summary: List users
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: email
+          in: query
+          schema:
+            type: string
+        - name: name
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+        '401':
+          description: Unauthorized
+
+  /users/{id}:
+    get:
+      summary: Get a single user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully retrieved user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid user ID
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+
+  /contacts:
+    get:
+      summary: List contacts
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: email
+          in: query
+          schema:
+            type: string
+        - name: phone
+          in: query
+          schema:
+            type: string
+        - name: name
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved contacts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+        '401':
+          description: Unauthorized
+
+    post:
+      summary: Create a new contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactCreate'
+      responses:
+        '201':
+          description: Successfully created contact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+
+  /contacts/{id}:
+    get:
+      summary: Get a single contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully retrieved contact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '400':
+          description: Invalid contact ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Contact not found
+
+    put:
+      summary: Update a contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactCreate'
+      responses:
+        '200':
+          description: Successfully updated contact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '400':
+          description: Invalid request body
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Contact not found
+
+    delete:
+      summary: Delete a contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successfully deleted contact
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Contact not found
+
+  /comments:
+    get:
+      summary: List comments
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: ticket_id
+          in: query
+          schema:
+            type: integer
+        - name: is_private
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Successfully retrieved comments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+        '400':
+          description: Invalid parameters
+        '401':
+          description: Unauthorized
+
+    post:
+      summary: Create a new comment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '201':
+          description: Successfully created comment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+
+  /comments/{id}:
+    get:
+      summary: Get a single comment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully retrieved comment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Invalid comment ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Comment not found
+
+  /attachments:
+    get:
+      summary: List attachments
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Successfully retrieved attachments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+        '401':
+          description: Unauthorized
+
+    post:
+      summary: Upload a new attachment
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - ticket_id
+              properties:
+                file:
+                  type: string
+                  format: binary
+                ticket_id:
+                  type: integer
+      responses:
+        '201':
+          description: Successfully uploaded attachment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '413':
+          description: File too large
+
+  /attachments/{id}:
+    get:
+      summary: Get a single attachment file
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully retrieved attachment file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Invalid attachment ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Attachment not found 

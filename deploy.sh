@@ -120,6 +120,7 @@ ssh ${REMOTE_USER}@${REMOTE_HOST} "mkdir -p /tmp/truto-deploy"
 scp ${BINARY_NAME} ${REMOTE_USER}@${REMOTE_HOST}:/tmp/truto-deploy/
 scp truto-api.service ${REMOTE_USER}@${REMOTE_HOST}:/tmp/
 scp ${LOCAL_ENV_FILE} ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_ENV_FILE}
+scp openapi.yml ${REMOTE_USER}@${REMOTE_HOST}:/tmp/truto-deploy/
 
 # Copy CLI tools to temp location
 echo "Copying CLI tools..."
