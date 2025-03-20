@@ -10,4 +10,5 @@ node_modules/
 *.db-wal
 
 .env
+.env.production
 uploads/
