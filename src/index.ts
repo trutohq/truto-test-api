@@ -5,6 +5,7 @@ import { prettyJSON } from 'hono/pretty-json'
 import { rateLimit, authenticate, errorHandler } from './middleware'
 import organizationsRouter from './organizations/organizationsRouter'
 import usersRouter from './users/usersRouter'
+import teamsRouter from './teams/teamsRouter'
 
 // Initialize the app
 const app = new Hono()
@@ -27,6 +28,9 @@ app.route('/organizations', organizationsRouter)
 
 // Mount user routes
 app.route('/users', usersRouter)
+
+// Mount teams routes
+app.route('/teams', teamsRouter)
 
 // Start the server
 const port = process.env.PORT || 3000

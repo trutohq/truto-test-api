@@ -43,4 +43,10 @@ export interface User extends BaseEntity {
   organization_id: number;
   role: 'admin' | 'agent';
   organization: Organization;
+}
+
+export interface Team extends BaseEntity {
+  name: string;
+  organization_id: number;
+  members: User[];
 } 
