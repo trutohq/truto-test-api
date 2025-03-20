@@ -1,4 +1,4 @@
-import db from './database';
+import db from './database'
 
 // Create organizations table
 db.run(`
@@ -9,7 +9,7 @@ db.run(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )
-`);
+`)
 
 // Create users table
 db.run(`
@@ -23,7 +23,7 @@ db.run(`
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
   )
-`);
+`)
 
 // Create api_keys table
 db.run(`
@@ -36,12 +36,12 @@ db.run(`
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   )
-`);
+`)
 
 // Create index on api_keys.key
 db.run(`
   CREATE INDEX IF NOT EXISTS idx_api_keys_key ON api_keys(key)
-`);
+`)
 
 // Create rate limits table
 db.run(`
@@ -53,7 +53,7 @@ db.run(`
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (api_key) REFERENCES api_keys(key) ON DELETE CASCADE
   )
-`);
+`)
 
 // Create teams table
 db.run(`
@@ -66,7 +66,7 @@ db.run(`
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     UNIQUE(name, organization_id)
   )
-`);
+`)
 
 // Create team_members table
 db.run(`
@@ -80,16 +80,16 @@ db.run(`
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE(team_id, user_id)
   )
-`);
+`)
 
 // Create index on team_members
 db.run(`
   CREATE INDEX IF NOT EXISTS idx_team_members_team_id ON team_members(team_id)
-`);
+`)
 
 db.run(`
   CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON team_members(user_id)
-`);
+`)
 
 // Create contacts table
 db.run(`
@@ -101,7 +101,7 @@ db.run(`
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
   )
-`);
+`)
 
 // Create contact_emails table
 db.run(`
@@ -115,12 +115,12 @@ db.run(`
     FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE,
     UNIQUE(email, contact_id)
   )
-`);
+`)
 
 // Create index on contact_emails.email for smart merge lookups
 db.run(`
   CREATE INDEX IF NOT EXISTS idx_contact_emails_email ON contact_emails(email)
-`);
+`)
 
 // Create contact_phones table
 db.run(`
@@ -134,12 +134,12 @@ db.run(`
     FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE,
     UNIQUE(phone, contact_id)
   )
-`);
+`)
 
 // Create index on contact_phones.phone for smart merge lookups
 db.run(`
   CREATE INDEX IF NOT EXISTS idx_contact_phones_phone ON contact_phones(phone)
-`);
+`)
 
 // Create tickets table
 db.run(`
@@ -159,7 +159,7 @@ db.run(`
     FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE SET NULL,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
   )
-`);
+`)
 
 // Create attachments table
 db.run(`
@@ -174,7 +174,7 @@ db.run(`
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
   )
-`);
+`)
 
 // Create comments table
 db.run(`
@@ -192,7 +192,7 @@ db.run(`
     FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
   )
-`);
+`)
 
 // Create ticket_attachments junction table
 db.run(`
@@ -206,7 +206,7 @@ db.run(`
     FOREIGN KEY (attachment_id) REFERENCES attachments(id) ON DELETE CASCADE,
     UNIQUE(ticket_id, attachment_id)
   )
-`);
+`)
 
 // Create comment_attachments junction table
 db.run(`
@@ -220,12 +220,24 @@ db.run(`
     FOREIGN KEY (attachment_id) REFERENCES attachments(id) ON DELETE CASCADE,
     UNIQUE(comment_id, attachment_id)
   )
-`);
+`)
 
 // Create indexes
-db.run(`CREATE INDEX IF NOT EXISTS idx_tickets_organization_id ON tickets(organization_id)`);
-db.run(`CREATE INDEX IF NOT EXISTS idx_tickets_assignee_id ON tickets(assignee_id)`);
-db.run(`CREATE INDEX IF NOT EXISTS idx_tickets_contact_id ON tickets(contact_id)`);
-db.run(`CREATE INDEX IF NOT EXISTS idx_comments_ticket_id ON comments(ticket_id)`);
-db.run(`CREATE INDEX IF NOT EXISTS idx_comments_organization_id ON comments(organization_id)`);
-db.run(`CREATE INDEX IF NOT EXISTS idx_attachments_organization_id ON attachments(organization_id)`); 
+db.run(
+  `CREATE INDEX IF NOT EXISTS idx_tickets_organization_id ON tickets(organization_id)`,
+)
+db.run(
+  `CREATE INDEX IF NOT EXISTS idx_tickets_assignee_id ON tickets(assignee_id)`,
+)
+db.run(
+  `CREATE INDEX IF NOT EXISTS idx_tickets_contact_id ON tickets(contact_id)`,
+)
+db.run(
+  `CREATE INDEX IF NOT EXISTS idx_comments_ticket_id ON comments(ticket_id)`,
+)
+db.run(
+  `CREATE INDEX IF NOT EXISTS idx_comments_organization_id ON comments(organization_id)`,
+)
+db.run(
+  `CREATE INDEX IF NOT EXISTS idx_attachments_organization_id ON attachments(organization_id)`,
+)

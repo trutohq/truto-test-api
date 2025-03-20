@@ -1,35 +1,36 @@
-import { BaseService } from '../services/baseService';
-import { Team, User, PaginatedResponse } from '../types';
-import { createPaginatedResponse, decodeCursor } from '../utils';
-import { convertDatesToISO } from '../utils/dates';
+import { BaseService } from '../services/baseService'
+import { Team, User, PaginatedResponse } from '../types'
+import { createPaginatedResponse, decodeCursor } from '../utils'
+import { convertDatesToISO } from '../utils/dates'
 
 type CreateTeam = {
-  name: string;
-  organization_id: number;
-};
+  name: string
+  organization_id: number
+}
 
-type UpdateTeam = Partial<CreateTeam>;
+type UpdateTeam = Partial<CreateTeam>
 
 type ListTeamsOptions = {
-  cursor?: string;
-  limit?: number;
-  organization_id?: number;
-};
+  cursor?: string
+  limit?: number
+  organization_id?: number
+}
 
 export class TeamsService extends BaseService<Team> {
-  protected tableName = 'teams';
-  protected idColumn = 'id';
+  protected tableName = 'teams'
+  protected idColumn = 'id'
 
   create(data: CreateTeam): Promise<Team> {
-    return super.create(data);
+    return super.create(data)
   }
 
   update(id: number, data: UpdateTeam): Promise<Team | undefined> {
-    return super.update(id, data);
+    return super.update(id, data)
   }
 
   async getById(id: number): Promise<Team | undefined> {
-    const row = this.query(`
+    const row = this.query(
+      `
       SELECT t.*, 
         json_group_array(
           json_object(
@@ -47,43 +48,52 @@ export class TeamsService extends BaseService<Team> {
       LEFT JOIN users u ON tm.user_id = u.id
       WHERE t.${this.idColumn} = ?
       GROUP BY t.id
-    `).get(id);
+    `,
+    ).get(id)
 
-    if (!row) return undefined;
+    if (!row) return undefined
 
     // Parse members and filter out null entries (when team has no members)
-    const team = this.parseJsonFields<Team>(row, ['members']);
+    const team = this.parseJsonFields<Team>(row, ['members'])
     if (team) {
-      team.members = team.members.filter((member: any) => member.id !== null);
+      team.members = team.members.filter((member: any) => member.id !== null)
     }
 
     // Convert dates to ISO format
-    const convertedTeam = convertDatesToISO(team);
+    const convertedTeam = convertDatesToISO(team)
     if (convertedTeam.members) {
-      convertedTeam.members = convertedTeam.members.map(member => convertDatesToISO(member));
+      convertedTeam.members = convertedTeam.members.map((member) =>
+        convertDatesToISO(member),
+      )
     }
-    return convertedTeam;
+    return convertedTeam
   }
 
-  async list({ cursor, limit = 10, organization_id }: ListTeamsOptions = {}): Promise<PaginatedResponse<Team>> {
-    const cursorData = cursor ? decodeCursor(cursor) : null;
-    const conditions: string[] = [];
-    const params: any[] = [];
+  async list({
+    cursor,
+    limit = 10,
+    organization_id,
+  }: ListTeamsOptions = {}): Promise<PaginatedResponse<Team>> {
+    const cursorData = cursor ? decodeCursor(cursor) : null
+    const conditions: string[] = []
+    const params: any[] = []
 
     if (cursorData) {
-      conditions.push(`t.${this.idColumn} > ?`);
-      params.push(cursorData.id);
+      conditions.push(`t.${this.idColumn} > ?`)
+      params.push(cursorData.id)
     }
 
     if (organization_id) {
-      conditions.push('t.organization_id = ?');
-      params.push(organization_id);
+      conditions.push('t.organization_id = ?')
+      params.push(organization_id)
     }
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-    params.push(limit + 1);
-    
-    const rows = this.query(`
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+    params.push(limit + 1)
+
+    const rows = this.query(
+      `
       SELECT t.*, 
         json_group_array(
           json_object(
@@ -103,48 +113,56 @@ export class TeamsService extends BaseService<Team> {
       GROUP BY t.id
       ORDER BY t.${this.idColumn}
       LIMIT ?
-    `).all(...params);
-    
-    const items = rows.map(row => {
-      const team = this.parseJsonFields<Team>(row, ['members']);
+    `,
+    ).all(...params)
+
+    const items = rows.map((row) => {
+      const team = this.parseJsonFields<Team>(row, ['members'])
       if (team) {
-        team.members = team.members.filter((member: any) => member.id !== null);
+        team.members = team.members.filter((member: any) => member.id !== null)
       }
 
       // Convert dates to ISO format
-      const convertedTeam = convertDatesToISO(team);
+      const convertedTeam = convertDatesToISO(team)
       if (convertedTeam.members) {
-        convertedTeam.members = convertedTeam.members.map(member => convertDatesToISO(member));
+        convertedTeam.members = convertedTeam.members.map((member) =>
+          convertDatesToISO(member),
+        )
       }
-      return convertedTeam;
-    });
+      return convertedTeam
+    })
 
-    return createPaginatedResponse(items, limit, cursor);
+    return createPaginatedResponse(items, limit, cursor)
   }
 
   async addMember(teamId: number, userId: number): Promise<boolean> {
     try {
-      this.query(`
+      this.query(
+        `
         INSERT INTO team_members (team_id, user_id)
         VALUES (?, ?)
-      `).run(teamId, userId);
-      return true;
+      `,
+      ).run(teamId, userId)
+      return true
     } catch (error) {
-      return false;
+      return false
     }
   }
 
   async removeMember(teamId: number, userId: number): Promise<boolean> {
-    const result = this.query(`
+    const result = this.query(
+      `
       DELETE FROM team_members
       WHERE team_id = ? AND user_id = ?
-    `).run(teamId, userId);
+    `,
+    ).run(teamId, userId)
 
-    return result.changes > 0;
+    return result.changes > 0
   }
 
   async getTeamsByUserId(userId: number): Promise<Team[]> {
-    const rows = this.query(`
+    const rows = this.query(
+      `
       SELECT t.*, 
         json_group_array(
           json_object(
@@ -165,18 +183,21 @@ export class TeamsService extends BaseService<Team> {
         WHERE team_id = t.id AND user_id = ?
       )
       GROUP BY t.id
-    `).all(userId);
+    `,
+    ).all(userId)
 
-    return rows.map(row => {
-      const team = this.parseJsonFields<Team>(row, ['members']);
+    return rows.map((row) => {
+      const team = this.parseJsonFields<Team>(row, ['members'])
       if (team) {
-        team.members = team.members.filter((member: any) => member.id !== null);
+        team.members = team.members.filter((member: any) => member.id !== null)
         // Convert dates to ISO format
-        const convertedTeam = convertDatesToISO(team);
-        convertedTeam.members = convertedTeam.members.map(member => convertDatesToISO(member));
-        return convertedTeam;
+        const convertedTeam = convertDatesToISO(team)
+        convertedTeam.members = convertedTeam.members.map((member) =>
+          convertDatesToISO(member),
+        )
+        return convertedTeam
       }
-      return team;
-    });
+      return team
+    })
   }
-} 
+}

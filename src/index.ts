@@ -25,7 +25,13 @@ app.use('*', rateLimit)
 app.onError(errorHandler)
 
 // Health check route
-app.get('/', (c) => c.json({ status: 'ok' }))
+app.get('/', (c) => {
+  return c.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    version: process.env.VERSION || '1.0.0',
+  })
+})
 
 // Mount organization routes
 app.route('/organizations', organizationsRouter)

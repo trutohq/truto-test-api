@@ -1,0 +1,28 @@
+[Unit]
+Description=Truto API Server
+After=network.target
+
+[Service]
+Type=simple
+User=truto
+Group=truto
+WorkingDirectory=/opt/truto-api
+Environment=NODE_ENV=production
+Environment=BUN_ENV=production
+ExecStart=/opt/truto-api/truto-api
+Restart=always
+RestartSec=3
+
+# Logging configuration
+SyslogIdentifier=truto-api
+StandardOutput=journal
+StandardError=journal
+
+# Security settings
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target 

@@ -5,7 +5,10 @@
     "create-org": "TZ=Etc/UTC bun run src/cli/create-org.ts",
     "create-api-key": "TZ=Etc/UTC bun run src/cli/create-api-key.ts",
     "migrate": "TZ=Etc/UTC bun run src/cli/migrate.ts",
-    "nuke-db": "TZ=Etc/UTC bun run src/cli/nuke-db.ts"
+    "nuke-db": "TZ=Etc/UTC bun run src/cli/nuke-db.ts",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
+    "prepare": "husky"
   },
   "dependencies": {
     "hono": "4.7.4",
@@ -15,6 +18,9 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/lodash-es": "4.17.12",
-    "@types/luxon": "3.4.2"
+    "@types/luxon": "3.4.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.0",
+    "prettier": "^3.5.3"
   }
 }

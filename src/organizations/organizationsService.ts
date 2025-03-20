@@ -1,22 +1,25 @@
-import { BaseService } from '../services/baseService';
-import { Organization } from '../types';
+import { BaseService } from '../services/baseService'
+import { Organization } from '../types'
 
 type CreateOrganization = {
-  name: string;
-  slug: string;
-};
+  name: string
+  slug: string
+}
 
-type UpdateOrganization = Partial<CreateOrganization>;
+type UpdateOrganization = Partial<CreateOrganization>
 
 export class OrganizationsService extends BaseService<Organization> {
-  protected tableName = 'organizations';
-  protected idColumn = 'id';
+  protected tableName = 'organizations'
+  protected idColumn = 'id'
 
   create(data: CreateOrganization): Promise<Organization> {
-    return super.create(data);
+    return super.create(data)
   }
 
-  update(id: number, data: UpdateOrganization): Promise<Organization | undefined> {
-    return super.update(id, data);
+  update(
+    id: number,
+    data: UpdateOrganization,
+  ): Promise<Organization | undefined> {
+    return super.update(id, data)
   }
 }

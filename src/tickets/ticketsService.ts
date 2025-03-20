@@ -1,50 +1,58 @@
-import { BaseService } from '../services/baseService';
-import { PaginatedResponse, Ticket, CreateTicket, UpdateTicket, TicketStatus, TicketPriority } from '../types';
-import { createPaginatedResponse, decodeCursor } from '../utils';
-import { getCurrentSQLiteTimestamp, convertDatesToISO } from '../utils/dates';
+import { BaseService } from '../services/baseService'
+import {
+  PaginatedResponse,
+  Ticket,
+  CreateTicket,
+  UpdateTicket,
+  TicketStatus,
+  TicketPriority,
+} from '../types'
+import { createPaginatedResponse, decodeCursor } from '../utils'
+import { getCurrentSQLiteTimestamp, convertDatesToISO } from '../utils/dates'
 
 type ListTicketsOptions = {
-  cursor?: string;
-  limit?: number;
-  organization_id?: number;
-  assignee_id?: number;
-  contact_id?: number;
-  status?: TicketStatus;
-  priority?: TicketPriority;
-};
+  cursor?: string
+  limit?: number
+  organization_id?: number
+  assignee_id?: number
+  contact_id?: number
+  status?: TicketStatus
+  priority?: TicketPriority
+}
 
 export class TicketsService extends BaseService<Ticket> {
-  protected tableName = 'tickets';
-  protected idColumn = 'id';
+  protected tableName = 'tickets'
+  protected idColumn = 'id'
 
   async create(data: CreateTicket): Promise<Ticket> {
-    const status = data.status || 'open';
-    const now = getCurrentSQLiteTimestamp();
+    const status = data.status || 'open'
+    const now = getCurrentSQLiteTimestamp()
 
     return super.create({
       ...data,
       status,
       priority: data.priority || 'normal',
       created_at: data.created_at || now,
-      closed_at: data.closed_at || (status === 'closed' ? now : null)
-    });
+      closed_at: data.closed_at || (status === 'closed' ? now : null),
+    })
   }
 
   async update(id: number, data: UpdateTicket): Promise<Ticket | undefined> {
-    const updates: any = { ...data };
-    
+    const updates: any = { ...data }
+
     // If status is being changed to closed, set closed_at
     if (data.status === 'closed') {
-      updates.closed_at = getCurrentSQLiteTimestamp();
+      updates.closed_at = getCurrentSQLiteTimestamp()
     } else if (data.status === 'open') {
-      updates.closed_at = null;
+      updates.closed_at = null
     }
 
-    return super.update(id, updates);
+    return super.update(id, updates)
   }
 
   async getById(id: number): Promise<Ticket | undefined> {
-    const row = this.query(`
+    const row = this.query(
+      `
       SELECT 
         t.*,
         json_object(
@@ -82,77 +90,86 @@ export class TicketsService extends BaseService<Ticket> {
       LEFT JOIN attachments a ON ta.attachment_id = a.id
       WHERE t.${this.idColumn} = ?
       GROUP BY t.id
-    `).get(id);
+    `,
+    ).get(id)
 
-    if (!row) return undefined;
+    if (!row) return undefined
 
     // Parse JSON fields and handle empty arrays
-    const ticket = this.parseJsonFields<Ticket>(row, ['assignee', 'contact', 'attachments']);
+    const ticket = this.parseJsonFields<Ticket>(row, [
+      'assignee',
+      'contact',
+      'attachments',
+    ])
     if (ticket.attachments?.[0]?.id === null) {
-      ticket.attachments = [];
+      ticket.attachments = []
     }
 
     // Convert dates to ISO format
-    const convertedTicket = convertDatesToISO(ticket);
+    const convertedTicket = convertDatesToISO(ticket)
     if (convertedTicket.assignee) {
-      convertedTicket.assignee = convertDatesToISO(convertedTicket.assignee);
+      convertedTicket.assignee = convertDatesToISO(convertedTicket.assignee)
     }
     if (convertedTicket.contact) {
-      convertedTicket.contact = convertDatesToISO(convertedTicket.contact);
+      convertedTicket.contact = convertDatesToISO(convertedTicket.contact)
     }
     if (convertedTicket.attachments) {
-      convertedTicket.attachments = convertedTicket.attachments.map(attachment => convertDatesToISO(attachment));
+      convertedTicket.attachments = convertedTicket.attachments.map(
+        (attachment) => convertDatesToISO(attachment),
+      )
     }
-    return convertedTicket;
+    return convertedTicket
   }
 
-  async list({ 
-    cursor, 
+  async list({
+    cursor,
     limit = 10,
     organization_id,
     assignee_id,
     contact_id,
     status,
-    priority 
+    priority,
   }: ListTicketsOptions = {}): Promise<PaginatedResponse<Ticket>> {
-    const cursorData = cursor ? decodeCursor(cursor) : null;
-    const conditions: string[] = [];
-    const params: any[] = [];
+    const cursorData = cursor ? decodeCursor(cursor) : null
+    const conditions: string[] = []
+    const params: any[] = []
 
     if (cursorData) {
-      conditions.push(`t.${this.idColumn} > ?`);
-      params.push(cursorData.id);
+      conditions.push(`t.${this.idColumn} > ?`)
+      params.push(cursorData.id)
     }
 
     if (organization_id) {
-      conditions.push('t.organization_id = ?');
-      params.push(organization_id);
+      conditions.push('t.organization_id = ?')
+      params.push(organization_id)
     }
 
     if (assignee_id) {
-      conditions.push('t.assignee_id = ?');
-      params.push(assignee_id);
+      conditions.push('t.assignee_id = ?')
+      params.push(assignee_id)
     }
 
     if (contact_id) {
-      conditions.push('t.contact_id = ?');
-      params.push(contact_id);
+      conditions.push('t.contact_id = ?')
+      params.push(contact_id)
     }
 
     if (status) {
-      conditions.push('t.status = ?');
-      params.push(status);
+      conditions.push('t.status = ?')
+      params.push(status)
     }
 
     if (priority) {
-      conditions.push('t.priority = ?');
-      params.push(priority);
+      conditions.push('t.priority = ?')
+      params.push(priority)
     }
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-    params.push(limit + 1);
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+    params.push(limit + 1)
 
-    const rows = this.query(`
+    const rows = this.query(
+      `
       SELECT 
         t.*,
         json_object(
@@ -192,28 +209,35 @@ export class TicketsService extends BaseService<Ticket> {
       GROUP BY t.id
       ORDER BY t.${this.idColumn}
       LIMIT ?
-    `).all(...params);
+    `,
+    ).all(...params)
 
-    const items = rows.map(row => {
-      const ticket = this.parseJsonFields<Ticket>(row, ['assignee', 'contact', 'attachments']);
+    const items = rows.map((row) => {
+      const ticket = this.parseJsonFields<Ticket>(row, [
+        'assignee',
+        'contact',
+        'attachments',
+      ])
       if (ticket.attachments?.[0]?.id === null) {
-        ticket.attachments = [];
+        ticket.attachments = []
       }
 
       // Convert dates to ISO format
-      const convertedTicket = convertDatesToISO(ticket);
+      const convertedTicket = convertDatesToISO(ticket)
       if (convertedTicket.assignee) {
-        convertedTicket.assignee = convertDatesToISO(convertedTicket.assignee);
+        convertedTicket.assignee = convertDatesToISO(convertedTicket.assignee)
       }
       if (convertedTicket.contact) {
-        convertedTicket.contact = convertDatesToISO(convertedTicket.contact);
+        convertedTicket.contact = convertDatesToISO(convertedTicket.contact)
       }
       if (convertedTicket.attachments) {
-        convertedTicket.attachments = convertedTicket.attachments.map(attachment => convertDatesToISO(attachment));
+        convertedTicket.attachments = convertedTicket.attachments.map(
+          (attachment) => convertDatesToISO(attachment),
+        )
       }
-      return convertedTicket;
-    });
+      return convertedTicket
+    })
 
-    return createPaginatedResponse(items, limit, cursor);
+    return createPaginatedResponse(items, limit, cursor)
   }
-} 
+}

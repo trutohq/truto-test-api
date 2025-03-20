@@ -1,4 +1,4 @@
-import '../config/migrations';
+import '../config/migrations'
 
-console.log('Running database migrations...');
-console.log('Migrations completed successfully.');
+console.log('Running database migrations...')
+console.log('Migrations completed successfully.')

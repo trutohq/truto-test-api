@@ -1,7 +1,12 @@
-import { BaseService } from '../services/baseService';
-import { PaginatedResponse, Comment, CreateComment, UpdateComment } from '../types';
-import { createPaginatedResponse, decodeCursor } from '../utils';
-import { convertDatesToISO } from '../utils/dates';
+import { BaseService } from '../services/baseService'
+import {
+  PaginatedResponse,
+  Comment,
+  CreateComment,
+  UpdateComment,
+} from '../types'
+import { createPaginatedResponse, decodeCursor } from '../utils'
+import { convertDatesToISO } from '../utils/dates'
 
 // Simple HTML conversion utility
 function convertToHtml(text: string): string {
@@ -11,45 +16,46 @@ function convertToHtml(text: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;')
-    .replace(/\n/g, '<br>');
+    .replace(/\n/g, '<br>')
 }
 
 type ListCommentsOptions = {
-  cursor?: string;
-  limit?: number;
-  ticket_id?: number;
-  organization_id?: number;
-  is_private?: boolean;
-};
+  cursor?: string
+  limit?: number
+  ticket_id?: number
+  organization_id?: number
+  is_private?: boolean
+}
 
 export class CommentsService extends BaseService<Comment> {
-  protected tableName = 'comments';
-  protected idColumn = 'id';
+  protected tableName = 'comments'
+  protected idColumn = 'id'
 
   async create(data: CreateComment): Promise<Comment> {
     // Convert text to HTML with basic escaping
-    const body_html = convertToHtml(data.body);
+    const body_html = convertToHtml(data.body)
 
     return super.create({
       ...data,
       body_html,
-      is_private: data.is_private || false
-    });
+      is_private: data.is_private || false,
+    })
   }
 
   async update(id: number, data: UpdateComment): Promise<Comment | undefined> {
-    const updates: any = { ...data };
-    
+    const updates: any = { ...data }
+
     // If body is being updated, regenerate HTML
     if (data.body) {
-      updates.body_html = convertToHtml(data.body);
+      updates.body_html = convertToHtml(data.body)
     }
 
-    return super.update(id, updates);
+    return super.update(id, updates)
   }
 
   async getById(id: number): Promise<Comment | undefined> {
-    const row = this.query(`
+    const row = this.query(
+      `
       SELECT 
         c.*,
         CASE c.author_type
@@ -89,62 +95,70 @@ export class CommentsService extends BaseService<Comment> {
       LEFT JOIN attachments a ON ca.attachment_id = a.id
       WHERE c.${this.idColumn} = ?
       GROUP BY c.id
-    `).get(id);
+    `,
+    ).get(id)
 
-    if (!row) return undefined;
+    if (!row) return undefined
 
     // Parse JSON fields and handle empty arrays
-    const comment = this.parseJsonFields<Comment>(row, ['author', 'attachments']);
+    const comment = this.parseJsonFields<Comment>(row, [
+      'author',
+      'attachments',
+    ])
     if (comment.attachments?.[0]?.id === null) {
-      comment.attachments = [];
+      comment.attachments = []
     }
 
     // Convert dates to ISO format
-    const convertedComment = convertDatesToISO(comment);
+    const convertedComment = convertDatesToISO(comment)
     if (convertedComment.author) {
-      convertedComment.author = convertDatesToISO(convertedComment.author);
+      convertedComment.author = convertDatesToISO(convertedComment.author)
     }
     if (convertedComment.attachments) {
-      convertedComment.attachments = convertedComment.attachments.map(attachment => convertDatesToISO(attachment));
+      convertedComment.attachments = convertedComment.attachments.map(
+        (attachment) => convertDatesToISO(attachment),
+      )
     }
-    return convertedComment;
+    return convertedComment
   }
 
-  async list({ 
-    cursor, 
+  async list({
+    cursor,
     limit = 10,
     ticket_id,
     organization_id,
-    is_private 
+    is_private,
   }: ListCommentsOptions = {}): Promise<PaginatedResponse<Comment>> {
-    const cursorData = cursor ? decodeCursor(cursor) : null;
-    const conditions: string[] = [];
-    const params: any[] = [];
+    const cursorData = cursor ? decodeCursor(cursor) : null
+    const conditions: string[] = []
+    const params: any[] = []
 
     if (cursorData) {
-      conditions.push(`c.${this.idColumn} > ?`);
-      params.push(cursorData.id);
+      conditions.push(`c.${this.idColumn} > ?`)
+      params.push(cursorData.id)
     }
 
     if (ticket_id) {
-      conditions.push('c.ticket_id = ?');
-      params.push(ticket_id);
+      conditions.push('c.ticket_id = ?')
+      params.push(ticket_id)
     }
 
     if (organization_id) {
-      conditions.push('c.organization_id = ?');
-      params.push(organization_id);
+      conditions.push('c.organization_id = ?')
+      params.push(organization_id)
     }
 
     if (typeof is_private === 'boolean') {
-      conditions.push('c.is_private = ?');
-      params.push(is_private ? 1 : 0);
+      conditions.push('c.is_private = ?')
+      params.push(is_private ? 1 : 0)
     }
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-    params.push(limit + 1);
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+    params.push(limit + 1)
 
-    const rows = this.query(`
+    const rows = this.query(
+      `
       SELECT 
         c.*,
         CASE c.author_type
@@ -186,25 +200,31 @@ export class CommentsService extends BaseService<Comment> {
       GROUP BY c.id
       ORDER BY c.${this.idColumn}
       LIMIT ?
-    `).all(...params);
+    `,
+    ).all(...params)
 
-    const items = rows.map(row => {
-      const comment = this.parseJsonFields<Comment>(row, ['author', 'attachments']);
+    const items = rows.map((row) => {
+      const comment = this.parseJsonFields<Comment>(row, [
+        'author',
+        'attachments',
+      ])
       if (comment.attachments?.[0]?.id === null) {
-        comment.attachments = [];
+        comment.attachments = []
       }
 
       // Convert dates to ISO format
-      const convertedComment = convertDatesToISO(comment);
+      const convertedComment = convertDatesToISO(comment)
       if (convertedComment.author) {
-        convertedComment.author = convertDatesToISO(convertedComment.author);
+        convertedComment.author = convertDatesToISO(convertedComment.author)
       }
       if (convertedComment.attachments) {
-        convertedComment.attachments = convertedComment.attachments.map(attachment => convertDatesToISO(attachment));
+        convertedComment.attachments = convertedComment.attachments.map(
+          (attachment) => convertDatesToISO(attachment),
+        )
       }
-      return convertedComment;
-    });
+      return convertedComment
+    })
 
-    return createPaginatedResponse(items, limit, cursor);
+    return createPaginatedResponse(items, limit, cursor)
   }
-} 
+}
