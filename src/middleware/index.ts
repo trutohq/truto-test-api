@@ -11,6 +11,10 @@ const usersService = new UsersService(db)
 const apiKeyService = new ApiKeyService(db)
 
 export async function rateLimit(c: Context, next: Next) {
+  if (c.req.path === '/') {
+    await next()
+    return
+  }
   const apiKey = c.req.header('x-api-key')
   if (!apiKey) {
     throw new HTTPException(401, { message: 'API key is required' })
@@ -75,6 +79,10 @@ export async function rateLimit(c: Context, next: Next) {
 }
 
 export async function authenticate(c: Context, next: Next) {
+  if (c.req.path === '/') {
+    await next()
+    return
+  }
   const apiKey = c.req.header('x-api-key')
   if (!apiKey) {
     throw new HTTPException(401, { message: 'API key is required' })

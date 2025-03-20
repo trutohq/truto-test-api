@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-User=truto
-Group=truto
+User=root
+Group=root
 WorkingDirectory=/opt/truto-api
 Environment=NODE_ENV=production
 Environment=BUN_ENV=production

@@ -65,7 +65,7 @@ health_check() {
 
 # Step 1: Compile the application
 echo "Compiling application..."
-bun build ./index.ts --compile --outfile ${BINARY_NAME} || {
+bun build --compile --minify --sourcemap --bytecode --target=bun-linux-x64 src/index.ts --outfile ${BINARY_NAME} || {
     echo -e "${RED}Compilation failed${NC}"
     exit 1
 }
@@ -78,7 +78,7 @@ mkdir -p cli-build
 for cli_file in src/cli/*.ts; do
     filename=$(basename "$cli_file" .ts)
     echo "Compiling $filename..."
-    bun build "$cli_file" --compile --outfile "cli-build/$filename" || {
+    bun build "$cli_file" --compile --minify --sourcemap --bytecode --target=bun-linux-x64 --outfile "cli-build/$filename" || {
         echo -e "${RED}Failed to compile $filename${NC}"
         exit 1
     }
@@ -115,24 +115,36 @@ fi
 
 # Step 5: Copy new files
 echo "Copying files to remote server..."
-scp ${BINARY_NAME} ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_APP_DIR}/
+# First copy files to temporary location
+ssh ${REMOTE_USER}@${REMOTE_HOST} "mkdir -p /tmp/truto-deploy"
+scp ${BINARY_NAME} ${REMOTE_USER}@${REMOTE_HOST}:/tmp/truto-deploy/
 scp truto-api.service ${REMOTE_USER}@${REMOTE_HOST}:/tmp/
 scp ${LOCAL_ENV_FILE} ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_ENV_FILE}
 
-# Copy CLI tools
+# Copy CLI tools to temp location
 echo "Copying CLI tools..."
-scp cli-build/* ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_APP_DIR}/
+scp cli-build/* ${REMOTE_USER}@${REMOTE_HOST}:/tmp/truto-deploy/
 
-# Make CLI tools executable
-echo "Making CLI tools executable..."
-ssh ${REMOTE_USER}@${REMOTE_HOST} "chmod +x ${REMOTE_APP_DIR}/migrate ${REMOTE_APP_DIR}/seed-data ${REMOTE_APP_DIR}/create-org ${REMOTE_APP_DIR}/create-api-key ${REMOTE_APP_DIR}/nuke-db"
+# Stop the service if it's running
+if check_service_status; then
+    echo "Stopping service temporarily..."
+    ssh ${REMOTE_USER}@${REMOTE_HOST} "sudo systemctl stop truto-api.service"
+fi
+
+# Move binaries into place and set permissions
+echo "Moving binaries into place..."
+ssh ${REMOTE_USER}@${REMOTE_HOST} "
+    mv /tmp/truto-deploy/* ${REMOTE_APP_DIR}/ && \
+    rm -rf /tmp/truto-deploy && \
+    chmod +x ${REMOTE_APP_DIR}/*
+"
 
 # Step 6: Setup service and permissions
 echo "Setting up service and permissions..."
 ssh ${REMOTE_USER}@${REMOTE_HOST} "
     sudo mv /tmp/truto-api.service /etc/systemd/system/ && \
     sudo systemctl daemon-reload && \
-    sudo setcap 'cap_net_bind_service=+ep' ${REMOTE_APP_DIR}/${BINARY_NAME} && \
+    sudo setcap 'cap_net_bind_service=+eip' ${REMOTE_APP_DIR}/${BINARY_NAME} && \
     sudo systemctl restart systemd-journald
 "
 
