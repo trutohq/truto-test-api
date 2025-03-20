@@ -59,10 +59,11 @@ components:
       properties:
         id:
           type: integer
-        title:
+        subject:
           type: string
         description:
           type: string
+          nullable: true
         status:
           type: string
           enum: [open, closed]
@@ -71,16 +72,30 @@ components:
           enum: [low, normal, high]
         assignee_id:
           type: integer
+          nullable: true
         contact_id:
           type: integer
+          nullable: true
         organization_id:
           type: integer
+        closed_at:
+          type: string
+          format: date-time
+          nullable: true
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time
+        assignee:
+          $ref: '#/components/schemas/User'
+        contact:
+          $ref: '#/components/schemas/Contact'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
 
     PaginatedResponse:
       type: object
@@ -103,12 +118,46 @@ components:
           type: integer
         name:
           type: string
-        email:
-          type: string
-        phone:
-          type: string
         organization_id:
           type: integer
+        emails:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              contact_id:
+                type: integer
+              email:
+                type: string
+              is_primary:
+                type: boolean
+              created_at:
+                type: string
+                format: date-time
+              updated_at:
+                type: string
+                format: date-time
+        phones:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              contact_id:
+                type: integer
+              phone:
+                type: string
+              is_primary:
+                type: boolean
+              created_at:
+                type: string
+                format: date-time
+              updated_at:
+                type: string
+                format: date-time
         created_at:
           type: string
           format: date-time
@@ -121,14 +170,19 @@ components:
       properties:
         id:
           type: integer
-        content:
-          type: string
         ticket_id:
           type: integer
-        user_id:
-          type: integer
+        body:
+          type: string
+        body_html:
+          type: string
         is_private:
           type: boolean
+        author_type:
+          type: string
+          enum: [user, contact]
+        author_id:
+          type: integer
         organization_id:
           type: integer
         created_at:
@@ -137,18 +191,28 @@ components:
         updated_at:
           type: string
           format: date-time
+        author:
+          oneOf:
+            - $ref: '#/components/schemas/User'
+            - $ref: '#/components/schemas/Contact'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
 
     Attachment:
       type: object
       properties:
         id:
           type: integer
-        filename:
+        file_name:
           type: string
         content_type:
           type: string
         size:
           type: integer
+        file_path:
+          type: string
         ticket_id:
           type: integer
         organization_id:
@@ -164,6 +228,122 @@ components:
       type: object
       required:
         - name
+        - organization_id
+      properties:
+        name:
+          type: string
+        organization_id:
+          type: integer
+        emails:
+          type: array
+          items:
+            type: object
+            required:
+              - email
+            properties:
+              email:
+                type: string
+                format: email
+              is_primary:
+                type: boolean
+                default: false
+        phones:
+          type: array
+          items:
+            type: object
+            required:
+              - phone
+            properties:
+              phone:
+                type: string
+              is_primary:
+                type: boolean
+                default: false
+
+    TicketCreate:
+      type: object
+      required:
+        - subject
+        - organization_id
+      properties:
+        subject:
+          type: string
+        description:
+          type: string
+        assignee_id:
+          type: integer
+        contact_id:
+          type: integer
+        organization_id:
+          type: integer
+        priority:
+          type: string
+          enum: [low, normal, high]
+          default: normal
+        status:
+          type: string
+          enum: [open, closed]
+        created_at:
+          type: string
+          format: date-time
+        closed_at:
+          type: string
+          format: date-time
+
+    TicketUpdate:
+      type: object
+      properties:
+        subject:
+          type: string
+        description:
+          type: string
+        assignee_id:
+          type: integer
+          nullable: true
+        contact_id:
+          type: integer
+          nullable: true
+        priority:
+          type: string
+          enum: [low, normal, high]
+        status:
+          type: string
+          enum: [open, closed]
+
+    CommentCreate:
+      type: object
+      required:
+        - ticket_id
+        - body
+        - author_type
+        - author_id
+        - organization_id
+      properties:
+        ticket_id:
+          type: integer
+        body:
+          type: string
+        is_private:
+          type: boolean
+          default: false
+        author_type:
+          type: string
+          enum: [user, contact]
+        author_id:
+          type: integer
+        organization_id:
+          type: integer
+
+    CommentUpdate:
+      type: object
+      properties:
+        body:
+          type: string
+        is_private:
+          type: boolean
+
+    ContactUpdate:
+      type: object
       properties:
         name:
           type: string
@@ -177,8 +357,8 @@ components:
               email:
                 type: string
                 format: email
-              label:
-                type: string
+              is_primary:
+                type: boolean
         phones:
           type: array
           items:
@@ -188,40 +368,65 @@ components:
             properties:
               phone:
                 type: string
-              label:
-                type: string
+              is_primary:
+                type: boolean
 
-    TicketCreate:
+    Team:
       type: object
-      required:
-        - subject
       properties:
-        subject:
-          type: string
-        description:
-          type: string
-        assignee_id:
+        id:
           type: integer
-        contact_id:
-          type: integer
-        priority:
+        name:
           type: string
-          enum: [low, normal, high]
-          default: normal
+        organization_id:
+          type: integer
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
 
-    CommentCreate:
+    TeamCreate:
       type: object
       required:
-        - content
+        - name
+        - organization_id
+      properties:
+        name:
+          type: string
+        organization_id:
+          type: integer
+        member_ids:
+          type: array
+          items:
+            type: integer
+
+    TeamUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        member_ids:
+          type: array
+          items:
+            type: integer
+
+    AttachmentCreate:
+      type: object
+      required:
+        - file
         - ticket_id
       properties:
-        content:
+        file:
           type: string
+          format: binary
         ticket_id:
           type: integer
-        is_private:
-          type: boolean
-          default: false
 
 security:
   - ApiKeyAuth: []
@@ -350,7 +555,29 @@ paths:
           description: Unauthorized
 
   /tickets/{id}:
-    put:
+    get:
+      summary: Get a single ticket
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully retrieved ticket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Ticket not found
+
+    patch:
       summary: Update a ticket
       parameters:
         - name: id
@@ -363,7 +590,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TicketCreate'
+              $ref: '#/components/schemas/TicketUpdate'
       responses:
         '200':
           description: Successfully updated ticket
@@ -373,6 +600,24 @@ paths:
                 $ref: '#/components/schemas/Ticket'
         '400':
           description: Invalid request body
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Ticket not found
+
+    delete:
+      summary: Delete a ticket
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successfully deleted ticket
         '401':
           description: Unauthorized
         '403':
@@ -531,7 +776,7 @@ paths:
         '404':
           description: Contact not found
 
-    put:
+    patch:
       summary: Update a contact
       parameters:
         - name: id
@@ -544,7 +789,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContactCreate'
+              $ref: '#/components/schemas/ContactUpdate'
       responses:
         '200':
           description: Successfully updated contact
@@ -600,6 +845,15 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: author_type
+          in: query
+          schema:
+            type: string
+            enum: [user, contact]
+        - name: author_id
+          in: query
+          schema:
+            type: integer
       responses:
         '200':
           description: Successfully retrieved comments
@@ -661,6 +915,54 @@ paths:
         '404':
           description: Comment not found
 
+    patch:
+      summary: Update a comment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentUpdate'
+      responses:
+        '200':
+          description: Successfully updated comment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Invalid request body
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Comment not found
+
+    delete:
+      summary: Delete a comment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successfully deleted comment
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Comment not found
+
   /attachments:
     get:
       summary: List attachments
@@ -674,6 +976,10 @@ paths:
           schema:
             type: integer
             default: 10
+        - name: ticket_id
+          in: query
+          schema:
+            type: integer
       responses:
         '200':
           description: Successfully retrieved attachments
@@ -691,16 +997,7 @@ paths:
         content:
           multipart/form-data:
             schema:
-              type: object
-              required:
-                - file
-                - ticket_id
-              properties:
-                file:
-                  type: string
-                  format: binary
-                ticket_id:
-                  type: integer
+              $ref: '#/components/schemas/AttachmentCreate'
       responses:
         '201':
           description: Successfully uploaded attachment
@@ -739,4 +1036,146 @@ paths:
         '403':
           description: Access denied
         '404':
-          description: Attachment not found 
+          description: Attachment not found
+
+    delete:
+      summary: Delete an attachment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successfully deleted attachment
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Attachment not found
+
+  /teams:
+    get:
+      summary: List teams
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: name
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved teams
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+        '401':
+          description: Unauthorized
+
+    post:
+      summary: Create a new team
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamCreate'
+      responses:
+        '201':
+          description: Successfully created team
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+
+  /teams/{id}:
+    get:
+      summary: Get a single team
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully retrieved team
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '400':
+          description: Invalid team ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Team not found
+
+    patch:
+      summary: Update a team
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamUpdate'
+      responses:
+        '200':
+          description: Successfully updated team
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '400':
+          description: Invalid request body
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Team not found
+
+    delete:
+      summary: Delete a team
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successfully deleted team
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Team not found 
