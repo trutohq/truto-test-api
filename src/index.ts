@@ -7,6 +7,9 @@ import organizationsRouter from './organizations/organizationsRouter'
 import usersRouter from './users/usersRouter'
 import teamsRouter from './teams/teamsRouter'
 import contactsRouter from './contacts/contactsRouter'
+import ticketsRouter from './tickets/ticketsRouter'
+import commentsRouter from './tickets/commentsRouter'
+import attachmentsRouter from './tickets/attachmentsRouter'
 
 // Initialize the app
 const app = new Hono()
@@ -35,6 +38,11 @@ app.route('/teams', teamsRouter)
 
 // Mount contacts routes
 app.route('/contacts', contactsRouter)
+
+// Mount ticket-related routes
+app.route('/tickets', ticketsRouter)
+app.route('/comments', commentsRouter)
+app.route('/attachments', attachmentsRouter)
 
 // Start the server
 const port = process.env.PORT || 3000

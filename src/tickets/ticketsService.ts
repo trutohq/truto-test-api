@@ -1,7 +1,7 @@
 import { BaseService } from '../services/baseService';
 import { PaginatedResponse, Ticket, CreateTicket, UpdateTicket, TicketStatus, TicketPriority } from '../types';
 import { createPaginatedResponse, decodeCursor } from '../utils';
-import { getCurrentSQLiteTimestamp } from '../utils/dates';
+import { getCurrentSQLiteTimestamp, convertDatesToISO } from '../utils/dates';
 
 type ListTicketsOptions = {
   cursor?: string;
@@ -91,7 +91,19 @@ export class TicketsService extends BaseService<Ticket> {
     if (ticket.attachments?.[0]?.id === null) {
       ticket.attachments = [];
     }
-    return ticket;
+
+    // Convert dates to ISO format
+    const convertedTicket = convertDatesToISO(ticket);
+    if (convertedTicket.assignee) {
+      convertedTicket.assignee = convertDatesToISO(convertedTicket.assignee);
+    }
+    if (convertedTicket.contact) {
+      convertedTicket.contact = convertDatesToISO(convertedTicket.contact);
+    }
+    if (convertedTicket.attachments) {
+      convertedTicket.attachments = convertedTicket.attachments.map(attachment => convertDatesToISO(attachment));
+    }
+    return convertedTicket;
   }
 
   async list({ 
@@ -187,7 +199,19 @@ export class TicketsService extends BaseService<Ticket> {
       if (ticket.attachments?.[0]?.id === null) {
         ticket.attachments = [];
       }
-      return ticket;
+
+      // Convert dates to ISO format
+      const convertedTicket = convertDatesToISO(ticket);
+      if (convertedTicket.assignee) {
+        convertedTicket.assignee = convertDatesToISO(convertedTicket.assignee);
+      }
+      if (convertedTicket.contact) {
+        convertedTicket.contact = convertDatesToISO(convertedTicket.contact);
+      }
+      if (convertedTicket.attachments) {
+        convertedTicket.attachments = convertedTicket.attachments.map(attachment => convertDatesToISO(attachment));
+      }
+      return convertedTicket;
     });
 
     return createPaginatedResponse(items, limit, cursor);

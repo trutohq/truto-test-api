@@ -1,6 +1,8 @@
 import { BaseService } from '../services/baseService';
-import { User, PaginatedResponse } from '../types';
+import { User } from '../types';
+import { PaginatedResponse } from '../types';
 import { createPaginatedResponse, decodeCursor } from '../utils';
+import { convertDatesToISO } from '../utils/dates';
 
 type CreateUser = {
   email: string;
@@ -47,7 +49,15 @@ export class UsersService extends BaseService<User> {
       WHERE u.${this.idColumn} = ?
     `).get(id);
     
-    return this.parseJsonFields<User>(row, ['organization']);
+    if (!row) return undefined;
+
+    const user = this.parseJsonFields<User>(row, ['organization']);
+    // Convert dates to ISO format
+    const convertedUser = convertDatesToISO(user);
+    if (convertedUser.organization) {
+      convertedUser.organization = convertDatesToISO(convertedUser.organization);
+    }
+    return convertedUser;
   }
 
   async getByEmail(email: string): Promise<User | undefined> {
@@ -65,7 +75,15 @@ export class UsersService extends BaseService<User> {
       WHERE u.email = ?
     `).get(email);
     
-    return this.parseJsonFields<User>(row, ['organization']);
+    if (!row) return undefined;
+
+    const user = this.parseJsonFields<User>(row, ['organization']);
+    // Convert dates to ISO format
+    const convertedUser = convertDatesToISO(user);
+    if (convertedUser.organization) {
+      convertedUser.organization = convertDatesToISO(convertedUser.organization);
+    }
+    return convertedUser;
   }
 
   async list({ cursor, limit = 10, email, name, organization_id }: ListUsersOptions = {}): Promise<PaginatedResponse<User>> {
@@ -113,7 +131,16 @@ export class UsersService extends BaseService<User> {
       LIMIT ?
     `).all(...params);
     
-    const items = rows.map(row => this.parseJsonFields<User>(row, ['organization']));
+    const items = rows.map(row => {
+      const user = this.parseJsonFields<User>(row, ['organization']);
+      // Convert dates to ISO format
+      const convertedUser = convertDatesToISO(user);
+      if (convertedUser.organization) {
+        convertedUser.organization = convertDatesToISO(convertedUser.organization);
+      }
+      return convertedUser;
+    });
+
     return createPaginatedResponse(items, limit, cursor);
   }
 } 

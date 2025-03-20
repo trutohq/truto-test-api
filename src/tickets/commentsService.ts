@@ -1,7 +1,9 @@
 import { BaseService } from '../services/baseService';
 import { PaginatedResponse, Comment, CreateComment, UpdateComment } from '../types';
 import { createPaginatedResponse, decodeCursor } from '../utils';
+import { convertDatesToISO } from '../utils/dates';
 
+// Simple HTML conversion utility
 function convertToHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -96,7 +98,16 @@ export class CommentsService extends BaseService<Comment> {
     if (comment.attachments?.[0]?.id === null) {
       comment.attachments = [];
     }
-    return comment;
+
+    // Convert dates to ISO format
+    const convertedComment = convertDatesToISO(comment);
+    if (convertedComment.author) {
+      convertedComment.author = convertDatesToISO(convertedComment.author);
+    }
+    if (convertedComment.attachments) {
+      convertedComment.attachments = convertedComment.attachments.map(attachment => convertDatesToISO(attachment));
+    }
+    return convertedComment;
   }
 
   async list({ 
@@ -182,7 +193,16 @@ export class CommentsService extends BaseService<Comment> {
       if (comment.attachments?.[0]?.id === null) {
         comment.attachments = [];
       }
-      return comment;
+
+      // Convert dates to ISO format
+      const convertedComment = convertDatesToISO(comment);
+      if (convertedComment.author) {
+        convertedComment.author = convertDatesToISO(convertedComment.author);
+      }
+      if (convertedComment.attachments) {
+        convertedComment.attachments = convertedComment.attachments.map(attachment => convertDatesToISO(attachment));
+      }
+      return convertedComment;
     });
 
     return createPaginatedResponse(items, limit, cursor);

@@ -1,6 +1,7 @@
 import { BaseService } from '../services/baseService';
 import { Contact, PaginatedResponse } from '../types';
 import { createPaginatedResponse, decodeCursor } from '../utils';
+import { convertDatesToISO } from '../utils/dates';
 
 type CreateContact = Partial<Contact>;
 
@@ -72,11 +73,22 @@ export class ContactsService extends BaseService<Contact> {
     if (!row) return undefined;
 
     const contact = this.parseJsonFields<Contact>(row, ['emails', 'phones']);
-    if (contact) {
-      contact.emails = contact.emails.filter((email: any) => email.id !== null);
-      contact.phones = contact.phones.filter((phone: any) => phone.id !== null);
+    if (contact.emails?.[0]?.id === null) {
+      contact.emails = [];
     }
-    return contact;
+    if (contact.phones?.[0]?.id === null) {
+      contact.phones = [];
+    }
+
+    // Convert dates to ISO format
+    const convertedContact = convertDatesToISO(contact);
+    if (convertedContact.emails) {
+      convertedContact.emails = convertedContact.emails.map(email => convertDatesToISO(email));
+    }
+    if (convertedContact.phones) {
+      convertedContact.phones = convertedContact.phones.map(phone => convertDatesToISO(phone));
+    }
+    return convertedContact;
   }
 
   async createWithContactInfo(data: Partial<Contact>): Promise<Contact> {
@@ -247,7 +259,16 @@ export class ContactsService extends BaseService<Contact> {
       contact.emails = contact.emails.filter((email: any) => email.id !== null);
       contact.phones = contact.phones.filter((phone: any) => phone.id !== null);
     }
-    return contact;
+
+    // Convert dates to ISO format
+    const convertedContact = convertDatesToISO(contact);
+    if (convertedContact.emails) {
+      convertedContact.emails = convertedContact.emails.map(email => convertDatesToISO(email));
+    }
+    if (convertedContact.phones) {
+      convertedContact.phones = convertedContact.phones.map(phone => convertDatesToISO(phone));
+    }
+    return convertedContact;
   }
 
   async list({ cursor, limit = 10, organization_id, email, phone, name }: ListContactsOptions = {}): Promise<PaginatedResponse<Contact>> {
@@ -316,7 +337,16 @@ export class ContactsService extends BaseService<Contact> {
         contact.emails = contact.emails.filter((email: any) => email.id !== null);
         contact.phones = contact.phones.filter((phone: any) => phone.id !== null);
       }
-      return contact;
+
+      // Convert dates to ISO format
+      const convertedContact = convertDatesToISO(contact);
+      if (convertedContact.emails) {
+        convertedContact.emails = convertedContact.emails.map(email => convertDatesToISO(email));
+      }
+      if (convertedContact.phones) {
+        convertedContact.phones = convertedContact.phones.map(phone => convertDatesToISO(phone));
+      }
+      return convertedContact;
     });
 
     return createPaginatedResponse(items, limit, cursor);

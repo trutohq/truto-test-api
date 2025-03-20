@@ -1,6 +1,7 @@
 import { BaseService } from '../services/baseService';
 import { Team, User, PaginatedResponse } from '../types';
 import { createPaginatedResponse, decodeCursor } from '../utils';
+import { convertDatesToISO } from '../utils/dates';
 
 type CreateTeam = {
   name: string;
@@ -55,7 +56,13 @@ export class TeamsService extends BaseService<Team> {
     if (team) {
       team.members = team.members.filter((member: any) => member.id !== null);
     }
-    return team;
+
+    // Convert dates to ISO format
+    const convertedTeam = convertDatesToISO(team);
+    if (convertedTeam.members) {
+      convertedTeam.members = convertedTeam.members.map(member => convertDatesToISO(member));
+    }
+    return convertedTeam;
   }
 
   async list({ cursor, limit = 10, organization_id }: ListTeamsOptions = {}): Promise<PaginatedResponse<Team>> {
@@ -103,7 +110,13 @@ export class TeamsService extends BaseService<Team> {
       if (team) {
         team.members = team.members.filter((member: any) => member.id !== null);
       }
-      return team;
+
+      // Convert dates to ISO format
+      const convertedTeam = convertDatesToISO(team);
+      if (convertedTeam.members) {
+        convertedTeam.members = convertedTeam.members.map(member => convertDatesToISO(member));
+      }
+      return convertedTeam;
     });
 
     return createPaginatedResponse(items, limit, cursor);
@@ -158,6 +171,10 @@ export class TeamsService extends BaseService<Team> {
       const team = this.parseJsonFields<Team>(row, ['members']);
       if (team) {
         team.members = team.members.filter((member: any) => member.id !== null);
+        // Convert dates to ISO format
+        const convertedTeam = convertDatesToISO(team);
+        convertedTeam.members = convertedTeam.members.map(member => convertDatesToISO(member));
+        return convertedTeam;
       }
       return team;
     });
