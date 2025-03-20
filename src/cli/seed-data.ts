@@ -3,7 +3,7 @@ import { DateTime } from 'luxon'
 import db from '../config/database'
 import { User, Team, Contact, Ticket } from '../types'
 import { randomDate } from '../utils/dates'
-import { ticketTemplates } from './ticket-templates'
+import { ticketTemplates } from '../ticket-templates'
 
 interface SeedOptions {
   organizationId: number
