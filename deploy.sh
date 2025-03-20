@@ -70,6 +70,20 @@ bun build ./index.ts --compile --outfile ${BINARY_NAME} || {
     exit 1
 }
 
+# Step 1b: Compile CLI tools
+echo "Compiling CLI tools..."
+mkdir -p cli-build
+
+# Compile each CLI tool
+for cli_file in src/cli/*.ts; do
+    filename=$(basename "$cli_file" .ts)
+    echo "Compiling $filename..."
+    bun build "$cli_file" --compile --outfile "cli-build/$filename" || {
+        echo -e "${RED}Failed to compile $filename${NC}"
+        exit 1
+    }
+done
+
 # Step 2: Update service file with correct user
 echo "Updating service file with user ${REMOTE_USER}..."
 sed -i.bak "s/User=truto/User=${REMOTE_USER}/g" truto-api.service
@@ -104,6 +118,14 @@ echo "Copying files to remote server..."
 scp ${BINARY_NAME} ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_APP_DIR}/
 scp truto-api.service ${REMOTE_USER}@${REMOTE_HOST}:/tmp/
 scp ${LOCAL_ENV_FILE} ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_ENV_FILE}
+
+# Copy CLI tools
+echo "Copying CLI tools..."
+scp cli-build/* ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_APP_DIR}/
+
+# Make CLI tools executable
+echo "Making CLI tools executable..."
+ssh ${REMOTE_USER}@${REMOTE_HOST} "chmod +x ${REMOTE_APP_DIR}/migrate ${REMOTE_APP_DIR}/seed-data ${REMOTE_APP_DIR}/create-org ${REMOTE_APP_DIR}/create-api-key ${REMOTE_APP_DIR}/nuke-db"
 
 # Step 6: Setup service and permissions
 echo "Setting up service and permissions..."
@@ -143,8 +165,9 @@ if ! health_check; then
     fi
 fi
 
-# Step 9: Clean up local binary
+# Step 9: Clean up local files
 echo "Cleaning up local files..."
 rm ${BINARY_NAME}
+rm -rf cli-build
 
 echo -e "${GREEN}Deployment completed successfully!${NC}" 
