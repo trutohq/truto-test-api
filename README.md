@@ -1,18 +1,38 @@
 # Truto Ticketing Sandbox REST API
 
-Built using Bun.sh and Hono.dev
+Built using Bun.sh and Hono.dev. And entirely using Cursor.
 
 To install dependencies:
+
 ```sh
 bun install
 ```
 
 To run:
+
 ```sh
 bun run dev
 ```
 
 open http://localhost:3000
+
+To run migration:
+
+```sh
+bun run migrate
+```
+
+To create the first org
+
+```sh
+bun run create-org
+```
+
+To seed data into the org
+
+```sh
+bun run seed-data
+```
 
 ## Structure
 
@@ -26,7 +46,7 @@ We can have the following entities in the ticketing system
 - users, are agents or team members part of an org working on tickets
 - teams, are groups of agents
 - contacts, are end users raising tickets
-- tickets, are tasks or issues raised by contacts. 
+- tickets, are tasks or issues raised by contacts.
 - comments, can be outgoing and internal both on tickets.
 - attachments, can be added to tickets and comments.
 
@@ -52,17 +72,17 @@ The rate limit is enforced on an API key level.
 
 ### Pagination
 
-The pagination will be cursor based and the response format will be 
+The pagination will be cursor based and the response format will be
 
 {
-    "data": [
-        {
-            "id": 1
-        },
-        ...
-    ],
-    next_cursor: "" // base64encoded
-    prev_cursor: "" // base64encoded
+"data": [
+{
+"id": 1
+},
+...
+],
+next_cursor: "" // base64encoded
+prev_cursor: "" // base64encoded
 }
 
 ### Response format
@@ -80,4 +100,3 @@ PATCH /entity/:id - Update record
 DELETE /entity/:id - Delete record
 
 POST /entity/:custom-method-name - Custom methods if required.
-
