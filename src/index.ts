@@ -10,6 +10,8 @@ import contactsRouter from './contacts/contactsRouter'
 import ticketsRouter from './tickets/ticketsRouter'
 import commentsRouter from './tickets/commentsRouter'
 import attachmentsRouter from './tickets/attachmentsRouter'
+import testStatusCodeRouter from './test-status-code/testStatusCodeRouter'
+import fileRouter from './files/fileRouter'
 import * as path from 'node:path'
 
 // Initialize the app
@@ -81,6 +83,12 @@ app.route('/contacts', contactsRouter)
 app.route('/tickets', ticketsRouter)
 app.route('/comments', commentsRouter)
 app.route('/attachments', attachmentsRouter)
+
+// Mount test status code routes
+app.route('/test-status-code', testStatusCodeRouter)
+
+// Mount file routes
+app.route('/files', fileRouter)
 
 // Start the server
 const port = process.env.PORT || 3000
