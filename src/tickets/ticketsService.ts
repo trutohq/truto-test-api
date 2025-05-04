@@ -8,7 +8,11 @@ import {
   UpdateTicket,
 } from '../types'
 import { createPaginatedResponse, decodeCursor } from '../utils'
-import { convertDatesToISO, getCurrentSQLiteTimestamp } from '../utils/dates'
+import {
+  convertDatesToISO,
+  getCurrentSQLiteTimestamp,
+  toSQLiteDateTime,
+} from '../utils/dates'
 
 type ListTicketsOptions = {
   cursor?: string
@@ -168,25 +172,25 @@ export class TicketsService extends BaseService<Ticket> {
       params.push(priority)
     }
 
-    // Date range filters
+    // Date range filters with SQLite datetime conversion
     if (created_at_gt) {
       conditions.push('t.created_at > ?')
-      params.push(created_at_gt)
+      params.push(toSQLiteDateTime(created_at_gt))
     }
 
     if (created_at_lt) {
       conditions.push('t.created_at < ?')
-      params.push(created_at_lt)
+      params.push(toSQLiteDateTime(created_at_lt))
     }
 
     if (updated_at_gt) {
       conditions.push('t.updated_at > ?')
-      params.push(updated_at_gt)
+      params.push(toSQLiteDateTime(updated_at_gt))
     }
 
     if (updated_at_lt) {
       conditions.push('t.updated_at < ?')
-      params.push(updated_at_lt)
+      params.push(toSQLiteDateTime(updated_at_lt))
     }
 
     // Cursor-based pagination
@@ -196,7 +200,11 @@ export class TicketsService extends BaseService<Ticket> {
         conditions.push(`
           (t.created_at > ? OR (t.created_at = ? AND t.id > ?))
         `)
-        params.push(cursorData.created_at, cursorData.created_at, cursorData.id)
+        params.push(
+          toSQLiteDateTime(cursorData.created_at),
+          toSQLiteDateTime(cursorData.created_at),
+          cursorData.id,
+        )
       } else {
         // If no date filters, use simple ID-based cursor
         conditions.push('t.id > ?')
