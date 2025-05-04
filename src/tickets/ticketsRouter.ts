@@ -1,8 +1,9 @@
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
-import { TicketsService } from './ticketsService'
-import { User } from '../types'
+import { DateTime } from 'luxon'
 import db from '../config/database'
+import { User } from '../types'
+import { TicketsService } from './ticketsService'
 
 type Context = {
   Variables: {
@@ -29,6 +30,10 @@ router.get('/', async (c) => {
     | 'normal'
     | 'high'
     | undefined
+  const created_at_gt = c.req.query('created_at_gt')
+  const created_at_lt = c.req.query('created_at_lt')
+  const updated_at_gt = c.req.query('updated_at_gt')
+  const updated_at_lt = c.req.query('updated_at_lt')
 
   // Validate status and priority if provided
   if (status && !['open', 'closed'].includes(status)) {
@@ -47,6 +52,23 @@ router.get('/', async (c) => {
   if (contact_id && isNaN(contact_id)) {
     throw new HTTPException(400, { message: 'Invalid contact ID' })
   }
+
+  // Validate date formats if provided
+  const validateDate = (date: string | undefined, field: string) => {
+    if (date) {
+      const parsedDate = DateTime.fromISO(date)
+      if (!parsedDate.isValid) {
+        throw new HTTPException(400, {
+          message: `Invalid ${field} format. Use ISO 8601 format (e.g., 2024-03-20T10:30:00Z)`,
+        })
+      }
+    }
+  }
+
+  validateDate(created_at_gt, 'created_at_gt')
+  validateDate(created_at_lt, 'created_at_lt')
+  validateDate(updated_at_gt, 'updated_at_gt')
+  validateDate(updated_at_lt, 'updated_at_lt')
 
   // Validate assignee belongs to organization if provided
   if (assignee_id) {
@@ -89,6 +111,10 @@ router.get('/', async (c) => {
       contact_id,
       status,
       priority,
+      created_at_gt,
+      created_at_lt,
+      updated_at_gt,
+      updated_at_lt,
     }),
   )
 })

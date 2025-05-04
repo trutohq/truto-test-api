@@ -1,14 +1,14 @@
 import { BaseService } from '../services/baseService'
 import {
+  CreateTicket,
   PaginatedResponse,
   Ticket,
-  CreateTicket,
-  UpdateTicket,
-  TicketStatus,
   TicketPriority,
+  TicketStatus,
+  UpdateTicket,
 } from '../types'
 import { createPaginatedResponse, decodeCursor } from '../utils'
-import { getCurrentSQLiteTimestamp, convertDatesToISO } from '../utils/dates'
+import { convertDatesToISO, getCurrentSQLiteTimestamp } from '../utils/dates'
 
 type ListTicketsOptions = {
   cursor?: string
@@ -18,6 +18,10 @@ type ListTicketsOptions = {
   contact_id?: number
   status?: TicketStatus
   priority?: TicketPriority
+  created_at_gt?: string
+  created_at_lt?: string
+  updated_at_gt?: string
+  updated_at_lt?: string
 }
 
 export class TicketsService extends BaseService<Ticket> {
@@ -129,16 +133,16 @@ export class TicketsService extends BaseService<Ticket> {
     contact_id,
     status,
     priority,
+    created_at_gt,
+    created_at_lt,
+    updated_at_gt,
+    updated_at_lt,
   }: ListTicketsOptions = {}): Promise<PaginatedResponse<Ticket>> {
     const cursorData = cursor ? decodeCursor(cursor) : null
     const conditions: string[] = []
     const params: any[] = []
 
-    if (cursorData) {
-      conditions.push(`t.${this.idColumn} > ?`)
-      params.push(cursorData.id)
-    }
-
+    // Base conditions
     if (organization_id) {
       conditions.push('t.organization_id = ?')
       params.push(organization_id)
@@ -162,6 +166,42 @@ export class TicketsService extends BaseService<Ticket> {
     if (priority) {
       conditions.push('t.priority = ?')
       params.push(priority)
+    }
+
+    // Date range filters
+    if (created_at_gt) {
+      conditions.push('t.created_at > ?')
+      params.push(created_at_gt)
+    }
+
+    if (created_at_lt) {
+      conditions.push('t.created_at < ?')
+      params.push(created_at_lt)
+    }
+
+    if (updated_at_gt) {
+      conditions.push('t.updated_at > ?')
+      params.push(updated_at_gt)
+    }
+
+    if (updated_at_lt) {
+      conditions.push('t.updated_at < ?')
+      params.push(updated_at_lt)
+    }
+
+    // Cursor-based pagination
+    if (cursorData) {
+      // If we have date filters, use a compound cursor
+      if (created_at_gt || created_at_lt || updated_at_gt || updated_at_lt) {
+        conditions.push(`
+          (t.created_at > ? OR (t.created_at = ? AND t.id > ?))
+        `)
+        params.push(cursorData.created_at, cursorData.created_at, cursorData.id)
+      } else {
+        // If no date filters, use simple ID-based cursor
+        conditions.push('t.id > ?')
+        params.push(cursorData.id)
+      }
     }
 
     const whereClause =
@@ -207,7 +247,7 @@ export class TicketsService extends BaseService<Ticket> {
       LEFT JOIN attachments a ON ta.attachment_id = a.id
       ${whereClause}
       GROUP BY t.id
-      ORDER BY t.${this.idColumn}
+      ORDER BY t.created_at DESC, t.id DESC
       LIMIT ?
     `,
     ).all(...params)
