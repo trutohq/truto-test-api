@@ -26,6 +26,7 @@ router.get('/', async (c) => {
   const limit = parseInt(c.req.query('limit') || '10')
   const email = c.req.query('email')
   const name = c.req.query('name')
+  const status = c.req.query('status')
 
   return c.json(
     await usersService.list({
@@ -33,6 +34,7 @@ router.get('/', async (c) => {
       limit,
       email,
       name,
+      status,
       organization_id: user.organization_id,
     }),
   )

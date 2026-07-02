@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
+import { runMigrations } from './config/migrations'
 import { rateLimit, authenticate, errorHandler } from './middleware'
 import organizationsRouter from './organizations/organizationsRouter'
 import usersRouter from './users/usersRouter'
@@ -13,6 +14,9 @@ import attachmentsRouter from './tickets/attachmentsRouter'
 import testStatusCodeRouter from './test-status-code/testStatusCodeRouter'
 import fileRouter from './files/fileRouter'
 import * as path from 'node:path'
+
+// Ensure the schema is up to date on boot (idempotent; preserves existing data)
+runMigrations()
 
 // Initialize the app
 const app = new Hono()
