@@ -7,6 +7,7 @@
     "migrate": "TZ=Etc/UTC bun run src/cli/migrate.ts",
     "nuke-db": "TZ=Etc/UTC bun run src/cli/nuke-db.ts",
     "seed-data": "TZ=Etc/UTC bun run src/cli/seed-data.ts",
+    "seed-directory": "TZ=Etc/UTC bun run src/cli/seed-directory.ts",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
     "prepare": "husky"

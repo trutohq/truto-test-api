@@ -43,10 +43,83 @@ components:
           type: integer
         email:
           type: string
+          description: Primary email address
         name:
           type: string
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        username:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        status:
+          type: string
+          description: Directory status
+          enum: [active, inactive, deleted, invited]
         organization_id:
           type: integer
+        role:
+          type: string
+          enum: [admin, agent]
+        organization:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            slug:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+        emails:
+          type: array
+          description: All emails for the user (may include a secondary alias)
+          items:
+            type: object
+            properties:
+              email:
+                type: string
+              type:
+                type: string
+                nullable: true
+              is_primary:
+                type: boolean
+        phones:
+          type: array
+          description: Phone numbers for the user (may be empty)
+          items:
+            type: object
+            properties:
+              phone:
+                type: string
+              type:
+                type: string
+                nullable: true
+              is_primary:
+                type: boolean
+        groups:
+          type: array
+          description: Teams/groups the user belongs to (may be empty)
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              organization_id:
+                type: integer
         created_at:
           type: string
           format: date-time
@@ -659,6 +732,12 @@ paths:
           in: query
           schema:
             type: string
+        - name: status
+          in: query
+          description: Filter by directory status
+          schema:
+            type: string
+            enum: [active, inactive, deleted, invited]
       responses:
         '200':
           description: Successfully retrieved users
