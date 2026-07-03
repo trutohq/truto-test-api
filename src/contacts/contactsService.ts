@@ -14,6 +14,10 @@ type ListContactsOptions = {
   email?: string
   phone?: string
   name?: string
+  created_at_gt?: string
+  created_at_lt?: string
+  updated_at_gt?: string
+  updated_at_lt?: string
 }
 
 export class ContactsService extends BaseService<Contact> {
@@ -309,16 +313,16 @@ export class ContactsService extends BaseService<Contact> {
     email,
     phone,
     name,
+    created_at_gt,
+    created_at_lt,
+    updated_at_gt,
+    updated_at_lt,
   }: ListContactsOptions = {}): Promise<PaginatedResponse<Contact>> {
     const cursorData = cursor ? decodeCursor(cursor) : null
     const conditions: string[] = []
     const params: any[] = []
 
-    if (cursorData) {
-      conditions.push(`c.${this.idColumn} > ?`)
-      params.push(cursorData.id)
-    }
-
+    // Base conditions
     if (organization_id) {
       conditions.push('c.organization_id = ?')
       params.push(organization_id)
@@ -341,6 +345,35 @@ export class ContactsService extends BaseService<Contact> {
         'EXISTS (SELECT 1 FROM contact_phones cp WHERE cp.contact_id = c.id AND cp.phone LIKE ?)',
       )
       params.push(`%${phone}%`)
+    }
+
+    // Date range filters with SQLite datetime conversion
+    if (created_at_gt) {
+      conditions.push('c.created_at > ?')
+      params.push(created_at_gt)
+    }
+
+    if (created_at_lt) {
+      conditions.push('c.created_at < ?')
+      params.push(created_at_lt)
+    }
+
+    if (updated_at_gt) {
+      conditions.push('c.updated_at > ?')
+      params.push(updated_at_gt)
+    }
+
+    if (updated_at_lt) {
+      conditions.push('c.updated_at < ?')
+      params.push(updated_at_lt)
+    }
+
+    // Cursor-based pagination - using DESC order, so we need to use < for pagination
+    if (cursorData) {
+      // For descending order, we need to use less than (not greater than)
+      // When ordering by created_at DESC, id DESC
+      conditions.push('(c.created_at < ? OR (c.created_at = ? AND c.id < ?))')
+      params.push(cursorData.created_at, cursorData.created_at, cursorData.id)
     }
 
     const whereClause =
@@ -371,7 +404,7 @@ export class ContactsService extends BaseService<Contact> {
       LEFT JOIN contact_phones cp ON c.id = cp.contact_id
       ${whereClause}
       GROUP BY c.id
-      ORDER BY c.${this.idColumn}
+      ORDER BY c.created_at DESC, c.id DESC
       LIMIT ?
     `,
     ).all(...params)

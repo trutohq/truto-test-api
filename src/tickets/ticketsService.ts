@@ -193,23 +193,12 @@ export class TicketsService extends BaseService<Ticket> {
       params.push(toSQLiteDateTime(updated_at_lt))
     }
 
-    // Cursor-based pagination
+    // Cursor-based pagination - using DESC order, so we need to use < for pagination
     if (cursorData) {
-      // If we have date filters, use a compound cursor
-      if (created_at_gt || created_at_lt || updated_at_gt || updated_at_lt) {
-        conditions.push(`
-          (t.created_at > ? OR (t.created_at = ? AND t.id > ?))
-        `)
-        params.push(
-          toSQLiteDateTime(cursorData.created_at),
-          toSQLiteDateTime(cursorData.created_at),
-          cursorData.id,
-        )
-      } else {
-        // If no date filters, use simple ID-based cursor
-        conditions.push('t.id > ?')
-        params.push(cursorData.id)
-      }
+      // For descending order, we need to use less than (not greater than)
+      // When ordering by created_at DESC, id DESC
+      conditions.push('(t.created_at < ? OR (t.created_at = ? AND t.id < ?))')
+      params.push(cursorData.created_at, cursorData.created_at, cursorData.id)
     }
 
     const whereClause =
