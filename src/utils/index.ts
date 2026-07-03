@@ -1,4 +1,4 @@
-import { PaginatedResponse, BaseEntity } from '../types'
+import { BaseEntity, PaginatedResponse } from '../types'
 
 export function encodeCursor(data: any): string {
   return Buffer.from(JSON.stringify(data)).toString('base64')
@@ -21,9 +21,14 @@ export function createPaginatedResponse<T extends BaseEntity>(
   const items = hasMore ? data.slice(0, limit) : data
 
   const nextCursor = hasMore
-    ? encodeCursor({ id: items[items.length - 1].id })
+    ? encodeCursor({
+        id: items[items.length - 1].id,
+        created_at: items[items.length - 1].created_at,
+      })
     : ''
-  const prevCursor = cursor ? encodeCursor({ id: items[0].id }) : ''
+  const prevCursor = cursor
+    ? encodeCursor({ id: items[0].id, created_at: items[0].created_at })
+    : ''
 
   return {
     data: items,

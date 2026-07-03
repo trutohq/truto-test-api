@@ -1,8 +1,9 @@
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
-import { ContactsService } from './contactsService'
-import { User } from '../types'
+import { DateTime } from 'luxon'
 import db from '../config/database'
+import { User } from '../types'
+import { ContactsService } from './contactsService'
 
 type Context = {
   Variables: {
@@ -21,6 +22,27 @@ router.get('/', async (c) => {
   const email = c.req.query('email')
   const phone = c.req.query('phone')
   const name = c.req.query('name')
+  const created_at_gt = c.req.query('created_at_gt')
+  const created_at_lt = c.req.query('created_at_lt')
+  const updated_at_gt = c.req.query('updated_at_gt')
+  const updated_at_lt = c.req.query('updated_at_lt')
+
+  // Validate date formats if provided
+  const validateDate = (date: string | undefined, field: string) => {
+    if (date) {
+      const parsedDate = DateTime.fromISO(date)
+      if (!parsedDate.isValid) {
+        throw new HTTPException(400, {
+          message: `Invalid ${field} format. Use ISO 8601 format (e.g., 2024-03-20T10:30:00Z)`,
+        })
+      }
+    }
+  }
+
+  validateDate(created_at_gt, 'created_at_gt')
+  validateDate(created_at_lt, 'created_at_lt')
+  validateDate(updated_at_gt, 'updated_at_gt')
+  validateDate(updated_at_lt, 'updated_at_lt')
 
   return c.json(
     await contactsService.list({
@@ -30,6 +52,10 @@ router.get('/', async (c) => {
       email,
       phone,
       name,
+      created_at_gt,
+      created_at_lt,
+      updated_at_gt,
+      updated_at_lt,
     }),
   )
 })
