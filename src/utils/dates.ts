@@ -29,7 +29,7 @@ export function toSQLiteDateTime(
   isoDate: string | null | undefined,
 ): string | null {
   if (!isoDate) return null
-  const dt = DateTime.fromISO(isoDate)
+  const dt = DateTime.fromISO(isoDate, { zone: 'utc' })
   if (!dt.isValid) return null
   return dt.toFormat(SQLITE_FORMAT)
 }
@@ -43,7 +43,7 @@ export function toISODateTime(
   sqliteDate: string | null | undefined,
 ): string | null {
   if (!sqliteDate) return null
-  const dt = DateTime.fromFormat(sqliteDate, SQLITE_FORMAT)
+  const dt = DateTime.fromFormat(sqliteDate, SQLITE_FORMAT, { zone: 'utc' })
   if (!dt.isValid) return null
   return dt.toISO()
 }
@@ -52,7 +52,7 @@ export function toISODateTime(
  * Gets current timestamp in SQLite format
  */
 export function getCurrentSQLiteTimestamp(): string {
-  return DateTime.now().toFormat(SQLITE_FORMAT)
+  return DateTime.utc().toFormat(SQLITE_FORMAT)
 }
 
 /**
