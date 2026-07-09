@@ -79,6 +79,7 @@ export interface User extends BaseEntity {
   username?: string | null
   title?: string | null
   status?: UserStatus
+  is_2fa_enabled?: boolean
 
   organization: Organization
 
