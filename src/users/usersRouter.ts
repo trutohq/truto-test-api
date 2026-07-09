@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { UsersService } from './usersService'
-import { User, USER_STATUSES, UserStatus } from '../types'
+import { User } from '../types'
 import db from '../config/database'
 
 type Context = {
@@ -27,12 +27,6 @@ router.get('/', async (c) => {
   const email = c.req.query('email')
   const name = c.req.query('name')
   const status = c.req.query('status')
-
-  if (status && !USER_STATUSES.includes(status as UserStatus)) {
-    throw new HTTPException(400, {
-      message: `Invalid status. Must be one of: ${USER_STATUSES.join(', ')}`,
-    })
-  }
 
   return c.json(
     await usersService.list({

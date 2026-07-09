@@ -103,16 +103,10 @@ export class UsersService extends BaseService<User> {
       converted.organization = convertDatesToISO(converted.organization)
     }
     if (converted.emails) {
-      converted.emails = converted.emails.map((e) => ({
-        ...convertDatesToISO(e),
-        is_primary: Boolean(e.is_primary),
-      }))
+      converted.emails = converted.emails.map((e) => convertDatesToISO(e))
     }
     if (converted.phones) {
-      converted.phones = converted.phones.map((p) => ({
-        ...convertDatesToISO(p),
-        is_primary: Boolean(p.is_primary),
-      }))
+      converted.phones = converted.phones.map((p) => convertDatesToISO(p))
     }
     if (converted.groups) {
       converted.groups = converted.groups.map((g) => convertDatesToISO(g))

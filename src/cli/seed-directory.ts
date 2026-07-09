@@ -82,12 +82,11 @@ function slugify(value: string): string {
     .replace(/^\.|\.$/g, '')
 }
 
-function getOrganization(
-  organizationId: number,
-): { id: number; slug: string } | null {
-  return db
-    .query('SELECT id, slug FROM organizations WHERE id = ?')
-    .get(organizationId) as { id: number; slug: string } | null
+function organizationExists(organizationId: number): boolean {
+  const row = db
+    .query('SELECT id FROM organizations WHERE id = ?')
+    .get(organizationId)
+  return !!row
 }
 
 interface SeededGroup {
@@ -98,18 +97,13 @@ interface SeededGroup {
 function seedDirectory(organizationId: number) {
   runMigrations()
 
-  const organization = getOrganization(organizationId)
-  if (!organization) {
+  if (!organizationExists(organizationId)) {
     console.error(
       `Organization ${organizationId} does not exist. Create one first, e.g.\n` +
         `  bun run create-org "Truto Test Org" truto-test admin@truto.test "Admin User" admin`,
     )
     process.exit(1)
   }
-
-  // users.email is globally UNIQUE (not per-org). Prefix with the org slug so
-  // multiple orgs on the same database can each run this seeder safely.
-  const emailPrefix = `${organization.slug}.`
 
   faker.seed(FAKER_SEED)
 
@@ -161,10 +155,10 @@ function seedDirectory(organizationId: number) {
       const username = `${slugify(firstName)}.${slugify(lastName)}`
 
       // Globally-unique primary email (users.email is UNIQUE across the table).
-      let localPart = `${emailPrefix}${username}`
+      let localPart = username
       let attempt = 1
       while (usedEmails.has(`${localPart}@${EMAIL_DOMAIN}`)) {
-        localPart = `${emailPrefix}${username}${attempt++}`
+        localPart = `${username}${attempt++}`
       }
       const primaryEmail = `${localPart}@${EMAIL_DOMAIN}`
       usedEmails.add(primaryEmail)
@@ -205,7 +199,7 @@ function seedDirectory(organizationId: number) {
 
       let emailCount = 1
       if (i % 5 === 0) {
-        const alias = `${localPart}.personal@personal.example`
+        const alias = `${localPart}@personal.example`
         db.prepare(
           `INSERT INTO user_emails (user_id, email, type, is_primary, created_at, updated_at)
            VALUES (?, ?, 'home', 0, ?, ?)`,
