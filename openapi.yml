@@ -62,6 +62,9 @@ components:
           type: string
           description: Directory status
           enum: [active, inactive, deleted, invited]
+        is_2fa_enabled:
+          type: boolean
+          description: Whether the user has 2FA enabled
         organization_id:
           type: integer
         role:

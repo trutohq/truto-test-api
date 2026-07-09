@@ -75,6 +75,11 @@ function statusForIndex(i: number): UserStatus {
   return 'active'
 }
 
+function is2faEnabledForIndex(i: number): boolean {
+  // Deterministic 50/50 mix: 18 users with 2FA, 18 without.
+  return i % 2 === 0
+}
+
 function slugify(value: string): string {
   return value
     .toLowerCase()
@@ -123,6 +128,7 @@ function seedDirectory(organizationId: number) {
     withoutPhone: 0,
     withoutGroup: 0,
     admins: 0,
+    with2fa: 0,
   }
 
   db.transaction(() => {
@@ -173,14 +179,15 @@ function seedDirectory(organizationId: number) {
       const isAdmin = i % 12 === 0
       const role: 'admin' | 'agent' = isAdmin ? 'admin' : 'agent'
       const title = NO_TITLE_INDICES.has(i) ? null : TITLES[i % TITLES.length]
+      const is2faEnabled = is2faEnabledForIndex(i)
       const createdAt = seededTimestamp()
 
       const user = db
         .prepare(
           `INSERT INTO users
              (email, name, first_name, last_name, username, title, status,
-              organization_id, role, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              is_2fa_enabled, organization_id, role, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            RETURNING id`,
         )
         .get(
@@ -191,6 +198,7 @@ function seedDirectory(organizationId: number) {
           username,
           title,
           status,
+          is2faEnabled ? 1 : 0,
           organizationId,
           role,
           createdAt,
@@ -254,6 +262,7 @@ function seedDirectory(organizationId: number) {
       if (!hasPhone) summary.withoutPhone++
       if (memberOf.size === 0) summary.withoutGroup++
       if (isAdmin) summary.admins++
+      if (is2faEnabled) summary.with2fa++
     }
   })()
 
@@ -269,6 +278,9 @@ function seedDirectory(organizationId: number) {
   console.log(`  Admins       : ${summary.admins}`)
   console.log(
     `  Groups       : ${GROUP_NAMES.length} (${GROUP_NAMES.join(', ')})`,
+  )
+  console.log(
+    `  2FA enabled  : ${summary.with2fa} users (${summary.users - summary.with2fa} without)`,
   )
   console.log(`  Multi-email  : ${summary.withMultipleEmails} users`)
   console.log(`  No phone     : ${summary.withoutPhone} users (edge case)`)

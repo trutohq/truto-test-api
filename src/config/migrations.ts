@@ -16,6 +16,7 @@ const USER_DIRECTORY_COLUMNS: Array<{ name: string; definition: string }> = [
   // one via ALTER, and the enum may grow) — it is validated at the app layer.
   // Unified values: active | inactive | deleted | invited.
   { name: 'status', definition: "TEXT NOT NULL DEFAULT 'active'" },
+  { name: 'is_2fa_enabled', definition: 'INTEGER NOT NULL DEFAULT 0' },
 ]
 
 function tableExists(table: string): boolean {
