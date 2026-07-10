@@ -334,3 +334,5 @@ export function runMigrations() {
     `CREATE INDEX IF NOT EXISTS idx_attachments_organization_id ON attachments(organization_id)`,
   )
 }
+
+export default runMigrations
