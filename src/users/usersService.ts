@@ -111,6 +111,9 @@ export class UsersService extends BaseService<User> {
     if (converted.groups) {
       converted.groups = converted.groups.map((g) => convertDatesToISO(g))
     }
+    if ('is_2fa_enabled' in converted) {
+      converted.is_2fa_enabled = Boolean(converted.is_2fa_enabled)
+    }
     return converted
   }
 

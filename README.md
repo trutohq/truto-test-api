@@ -176,18 +176,19 @@ Page through the full list with `next_cursor` until it is empty.
 `seed-directory` creates **36 directory users** (plus the org admin) in one
 organization:
 
-| Aspect          | Detail                                                                             |
-| --------------- | ---------------------------------------------------------------------------------- |
-| Statuses        | 28 `active`, 4 `inactive`, 2 `invited`, 2 `deleted` (all four unified enum values) |
-| Groups          | 6 groups: Engineering, Product, Sales, Customer Support, People Ops, Leadership    |
-| Membership      | most users in 1–2 groups; admins also in Leadership; **2 users in no group**       |
-| Emails          | every user has a primary work email; ~8 users also have a secondary personal email |
-| Phones          | most users have a work phone (some also a mobile); **2 users have no phone**       |
-| Optional fields | **2 users have no title** (empty-optional edge case)                               |
-| Pagination      | 37 users total → 4 pages at the default page size of 10                            |
+| Aspect          | Detail                                                                                                                     |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Statuses        | 28 `active`, 4 `inactive`, 2 `invited`, 2 `deleted` (all four unified enum values)                                         |
+| Groups          | 6 groups: Engineering, Product, Sales, Customer Support, People Ops, Leadership                                            |
+| Membership      | most users in 1–2 groups; admins also in Leadership; **2 users in no group**                                               |
+| Emails          | every user has a primary work email (`{org-slug}.{username}@trutotest.dev`); ~8 users also have a secondary personal email |
+| Phones          | most users have a work phone (some also a mobile); **2 users have no phone**                                               |
+| Optional fields | **2 users have no title** (empty-optional edge case)                                                                       |
+| 2FA             | **18 users with `is_2fa_enabled: true`**, 18 with `false` (deterministic 50/50 mix)                                        |
+| Pagination      | 36 directory users + any pre-existing org members (e.g. the org admin)                                                     |
 
 The mapped unified `users` object includes `id`, `first_name`, `last_name`,
-`name`, `username`, `title`, `status`, `emails[]` (`{ email, type, is_primary }`),
+`name`, `username`, `title`, `status`, `is_2fa_enabled`, `emails[]` (`{ email, type, is_primary }`),
 `phones[]` (`{ number, type }`), `roles[]`, `organizations[]`, `groups[]`
 (`{ id, name, organization }`), `created_at` and `updated_at`.
 
@@ -206,8 +207,8 @@ The mapped unified `users` object includes `id`, `first_name`, `last_name`,
 ### Limitations vs real GWS / M365
 
 - **Auth is API-key only** — no OAuth, SSO, SCIM or admin-consent flows.
-- Not simulated: licenses, workspaces, activities/audit logs, 2FA/MFA state,
-  email verification, avatars, org hierarchy, custom schemas/attributes,
+- Not simulated: licenses, workspaces, activities/audit logs, email verification,
+  avatars, org hierarchy, custom schemas/attributes,
   delta/incremental sync tokens.
 - `role` is ticketing-shaped (`admin`/`agent`) and mapped straight into the
   unified `roles[]` — it is not a rich directory role model.
