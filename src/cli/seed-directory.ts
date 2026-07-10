@@ -75,9 +75,9 @@ function statusForIndex(i: number): UserStatus {
   return 'active'
 }
 
-function is2faEnabledForIndex(i: number): boolean {
-  // Deterministic 50/50 mix: 18 users with 2FA, 18 without.
-  return i % 2 === 0
+function is2faEnabledForIndex(): boolean {
+  // Seeded faker → reproducible ~50/50 mix across runs, not a fixed even/odd pattern.
+  return faker.datatype.boolean()
 }
 
 function slugify(value: string): string {
@@ -173,7 +173,7 @@ function seedDirectory(organizationId: number) {
       const isAdmin = i % 12 === 0
       const role: 'admin' | 'agent' = isAdmin ? 'admin' : 'agent'
       const title = NO_TITLE_INDICES.has(i) ? null : TITLES[i % TITLES.length]
-      const is2faEnabled = is2faEnabledForIndex(i)
+      const is2faEnabled = is2faEnabledForIndex()
       const createdAt = seededTimestamp()
 
       const user = db
