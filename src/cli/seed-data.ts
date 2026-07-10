@@ -18,8 +18,8 @@ function generateUsers(options: SeedOptions, count: number = 10): User[] {
   for (let i = 0; i < count; i++) {
     const user = db
       .prepare(
-        `INSERT INTO users (email, name, organization_id, role, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?)
+        `INSERT INTO users (email, name, organization_id, role, is_2fa_enabled, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
          RETURNING *`,
       )
       .get(
@@ -27,6 +27,7 @@ function generateUsers(options: SeedOptions, count: number = 10): User[] {
         faker.person.fullName(),
         options.organizationId,
         roles[Math.floor(Math.random() * roles.length)],
+        faker.datatype.boolean() ? 1 : 0,
         randomDate(options.startDate, options.endDate),
         randomDate(options.startDate, options.endDate),
       ) as User

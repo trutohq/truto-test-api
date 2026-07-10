@@ -184,7 +184,7 @@ organization:
 | Emails          | every user has a primary work email (`{org-slug}.{username}@trutotest.dev`); ~8 users also have a secondary personal email |
 | Phones          | most users have a work phone (some also a mobile); **2 users have no phone**                                               |
 | Optional fields | **2 users have no title** (empty-optional edge case)                                                                       |
-| 2FA             | **18 users with `is_2fa_enabled: true`**, 18 with `false` (deterministic 50/50 mix)                                        |
+| 2FA             | ~50/50 `is_2fa_enabled` true/false via seeded faker (reproducible across runs, not a fixed even/odd pattern)               |
 | Pagination      | 36 directory users + any pre-existing org members (e.g. the org admin)                                                     |
 
 The mapped unified `users` object includes `id`, `first_name`, `last_name`,
