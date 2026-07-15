@@ -9,6 +9,11 @@ integrations and unified APIs without a real provider. It serves two purposes:
   (statuses, multiple emails/phones, group membership) so customers can build
   and test **Unified User Directory** user-pull flows without a Google Workspace
   or Microsoft 365 tenant. See [User Directory Testing](#user-directory-testing-via-trutos-unified-api).
+- **SSO app authorization fixture** — deterministic third-party OAuth app grants
+  (client id, display name, scopes, native / anonymous flags) tied to directory
+  users, so customers can build and test the **Unified Single Sign-On** API
+  (`apps` / `app_users`) without a Google Workspace tenant. See
+  [SSO App Authorization Testing](#sso-app-authorization-testing-via-trutos-unified-single-sign-on-api).
 
 Built using Bun.sh and Hono.dev.
 
@@ -49,6 +54,14 @@ To seed a deterministic **User Directory** fixture into the org (see
 
 ```sh
 bun run seed-directory <organizationId>
+```
+
+To seed a deterministic **SSO App Authorizations** fixture (run _after_
+`seed-directory`; see
+[SSO App Authorization Testing](#sso-app-authorization-testing-via-trutos-unified-single-sign-on-api))
+
+```sh
+bun run seed-sso <organizationId>
 ```
 
 ## Structure
@@ -214,3 +227,107 @@ The mapped unified `users` object includes `id`, `first_name`, `last_name`,
   unified `roles[]` — it is not a rich directory role model.
 - Data is synthetic and stable; it does not change unless you re-seed.
 - Single organization per fixture (no multi-tenant / cross-org directories).
+
+## SSO App Authorization Testing (via Truto's Unified Single Sign-On API)
+
+On top of the directory users, this connector seeds a deterministic **SSO app
+authorization** fixture — the synthetic equivalent of Google Workspace's Admin
+SDK **tokens** API (the third-party OAuth apps each user has authorized against
+their account). Truto maps it into the **Unified Single Sign-On API** so
+customers can build and test `apps` / `app_users` pulls without a real Google
+Workspace tenant.
+
+### 1. Seed the fixture
+
+The SSO fixture is tied to the directory users, so seed the directory first:
+
+```sh
+bun run seed-directory <organizationId>
+bun run seed-sso <organizationId>
+```
+
+`seed-sso` is **deterministic** and **idempotent** — which apps a user has (and
+how many) are derived purely from that user's ordinal position among the
+directory users, so it seeds the same logical grants every time. It only clears
+and re-creates grants owned by this org's directory users (`@trutotest.dev`), so
+it never disturbs the org admin or any ticketing / directory data. Re-running it
+refreshes the fixture in place.
+
+### 2. What data to expect
+
+`seed-sso` authorizes apps from a fixed catalog of **8 synthetic third-party
+apps** across the org's **36 directory users** (84 grants in the reference
+fixture):
+
+| App                 | Scopes                                             | Native  | Anonymous |
+| ------------------- | -------------------------------------------------- | ------- | --------- |
+| Calendar Sync       | calendar.readonly, calendar.events                 | no      | no        |
+| Drive Auditor       | drive.readonly, drive.metadata.readonly            | no      | no        |
+| AI Meeting Notes    | calendar.readonly, meetings.record, userinfo.email | no      | no        |
+| Mobile Mail Client  | mail.readonly, mail.send, contacts.readonly        | **yes** | no        |
+| Expense Exporter    | spreadsheets, drive.file                           | no      | no        |
+| Slack for Workspace | userinfo.email, userinfo.profile                   | no      | no        |
+| Zoom Scheduler      | calendar.events, userinfo.email                    | no      | no        |
+| Legacy VPN Agent    | userinfo.email                                     | **yes** | **yes**   |
+
+| Aspect     | Detail                                                                                              |
+| ---------- | --------------------------------------------------------------------------------------------------- |
+| Grants     | 84 total across 34 users (~2.5 apps/user)                                                           |
+| No apps    | **2 users have authorized no apps** (empty-collection edge case)                                    |
+| Native     | 17 native grants (Mobile Mail Client + Legacy VPN Agent)                                            |
+| Anonymous  | 7 anonymous grants (Legacy VPN Agent — the one app that is native _and_ anonymous)                  |
+| Assignment | user _n_ (0-indexed by id) gets `1 + (n % 4)` apps: a contiguous catalog window starting at `n % 8` |
+| Uniqueness | a user authorizes a given app at most once (`UNIQUE(user_id, client_id)`)                           |
+
+Each grant carries `client_id`, `display_name`, `scopes[]`, `is_native`,
+`is_anonymous`, the owning `user_id`, and timestamps — enough to answer _which
+apps a user has authorized, each app's client id / display name, what scopes were
+granted, whether it is native, whether it is anonymous, and who the grant belongs
+to._ For example, the user at ordinal position 0 authorizes **Calendar Sync**;
+the user at position 3 authorizes **Mobile Mail Client, Expense Exporter, Slack
+for Workspace, Zoom Scheduler**.
+
+### 3. Pull SSO apps via the Unified Single Sign-On API
+
+```
+# apps a specific user has authorized (user_id is required, like Google's userKey)
+GET /unified/sso/apps?integrated_account_id=<account_id>&user_id=<userId>
+
+# the users an app can be assigned to (backed by the directory users)
+GET /unified/sso/app_users?integrated_account_id=<account_id>
+GET /unified/sso/app_users/<id>?integrated_account_id=<account_id>
+```
+
+### Native endpoints behind the mapping
+
+| Unified resource       | Native endpoint              | Notes                                             |
+| ---------------------- | ---------------------------- | ------------------------------------------------- |
+| `sso/apps` (list)      | `GET /sso-apps?user_id=<id>` | `user_id` → native `user_id` (≈ Google `userKey`) |
+| `sso/app_users` (list) | `GET /users`                 | reuses the directory users endpoint               |
+| `sso/app_users` (get)  | `GET /users/:id`             | reuses the directory user endpoint                |
+
+`GET /sso-apps` also lists **all** grants (no filter), supports a `client_id`
+filter, and exposes a single-grant `GET /sso-apps/:id`, for direct proxy testing.
+
+### How it maps to Unified SSO (vs real Google)
+
+- Google maps its Admin SDK `tokens.list` (a user's authorized apps) into Unified
+  SSO `apps`, and backs `app_users` with the directory `users` list. This
+  connector mirrors that exactly: `apps` ← `/sso-apps`, `app_users` ← `/users`.
+- The Unified `apps` object exposes `id` (the app's client id), `name` /
+  `display_name` and `status`; the granted `scopes`, `is_native`, `is_anonymous`
+  and owning `user_id` are preserved on the raw record (`remote_data`), just as
+  Google surfaces `scopes` / `nativeApp` / `anonymous` there.
+- `apps` is scoped to a single user via `user_id` (Google requires `userKey`);
+  `app_users` pages through the directory exactly like Unified User Directory
+  `users`.
+
+### Limitations vs real GWS / M365
+
+- The fixture models **app authorizations** (OAuth grants), not SSO **sign-in**
+  configuration — there are no SAML/OIDC connections, IdP metadata or sign-on
+  modes.
+- `apps` are per-user grants (as in Google's tokens API), not a global registry
+  of SAML/OIDC apps; the same app appears once per authorizing user.
+- Native / anonymous flags and scopes are synthetic and stable; they do not
+  change unless you re-seed.

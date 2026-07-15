@@ -89,6 +89,25 @@ export interface User extends BaseEntity {
   groups?: UserGroup[]
 }
 
+// A third-party OAuth application a directory user has authorized against their
+// account — the synthetic equivalent of a Google Admin SDK token resource. It
+// backs the Unified Single Sign-On API's `apps` resource.
+export interface SsoApp extends BaseEntity {
+  organization_id: number
+  // The directory user that granted the authorization (the grant owner).
+  user_id: number
+  // OAuth client id of the authorized app.
+  client_id: string
+  // Human-readable name of the authorized app.
+  display_name: string
+  // The OAuth scopes the user granted to the app.
+  scopes: string[]
+  // Whether the app is an installed/native app (Google's `nativeApp`).
+  is_native: boolean
+  // Whether the app is anonymous/unregistered (Google's `anonymous`).
+  is_anonymous: boolean
+}
+
 export interface Team extends BaseEntity {
   name: string
   organization_id: number

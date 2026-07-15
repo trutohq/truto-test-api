@@ -183,6 +183,36 @@ export function runMigrations() {
     CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON team_members(user_id)
   `)
 
+  // Create sso_apps table. Each row is one third-party OAuth app authorization a
+  // directory user has granted (the synthetic equivalent of a Google Admin SDK
+  // token). `scopes` is a JSON-encoded array of scope strings; `is_native` /
+  // `is_anonymous` are 0/1 flags (coerced to booleans at the app layer). The
+  // UNIQUE(user_id, client_id) pair means a user authorizes a given app once.
+  db.run(`
+    CREATE TABLE IF NOT EXISTS sso_apps (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      organization_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      client_id TEXT NOT NULL,
+      display_name TEXT NOT NULL,
+      scopes TEXT NOT NULL DEFAULT '[]',
+      is_native INTEGER NOT NULL DEFAULT 0,
+      is_anonymous INTEGER NOT NULL DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(user_id, client_id)
+    )
+  `)
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_sso_apps_organization_id ON sso_apps(organization_id)`,
+  )
+  db.run(`CREATE INDEX IF NOT EXISTS idx_sso_apps_user_id ON sso_apps(user_id)`)
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_sso_apps_client_id ON sso_apps(client_id)`,
+  )
+
   // Create contacts table
   db.run(`
     CREATE TABLE IF NOT EXISTS contacts (
