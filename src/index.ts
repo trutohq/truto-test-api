@@ -13,6 +13,7 @@ import commentsRouter from './tickets/commentsRouter'
 import attachmentsRouter from './tickets/attachmentsRouter'
 import testStatusCodeRouter from './test-status-code/testStatusCodeRouter'
 import fileRouter from './files/fileRouter'
+import ssoAppsRouter from './sso/ssoAppsRouter'
 import * as path from 'node:path'
 
 // Ensure the schema is up to date on boot (idempotent; preserves existing data)
@@ -93,6 +94,9 @@ app.route('/test-status-code', testStatusCodeRouter)
 
 // Mount file routes
 app.route('/files', fileRouter)
+
+// Mount SSO app authorization routes (Unified Single Sign-On fixture)
+app.route('/sso-apps', ssoAppsRouter)
 
 // Start the server
 const port = process.env.PORT || 3000

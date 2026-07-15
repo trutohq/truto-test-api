@@ -130,6 +130,44 @@ components:
           type: string
           format: date-time
 
+    SsoApp:
+      type: object
+      description: >-
+        A third-party OAuth app a directory user has authorized — the synthetic
+        equivalent of a Google Admin SDK token. Backs the Unified Single Sign-On
+        `apps` resource.
+      properties:
+        id:
+          type: integer
+        organization_id:
+          type: integer
+        user_id:
+          type: integer
+          description: The directory user that granted the authorization
+        client_id:
+          type: string
+          description: OAuth client id of the authorized app
+        display_name:
+          type: string
+          description: Human-readable name of the authorized app
+        scopes:
+          type: array
+          description: OAuth scopes the user granted to the app
+          items:
+            type: string
+        is_native:
+          type: boolean
+          description: Whether the app is an installed/native app (Google's nativeApp)
+        is_anonymous:
+          type: boolean
+          description: Whether the app is anonymous/unregistered (Google's anonymous)
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
     Ticket:
       type: object
       properties:
@@ -1260,4 +1298,69 @@ paths:
         '403':
           description: Access denied
         '404':
-          description: Team not found 
+          description: Team not found
+
+  /sso-apps:
+    get:
+      summary: List authorized SSO apps
+      description: >-
+        List synthetic third-party OAuth apps authorized by directory users.
+        Filter to one user's authorized apps with `user_id` (mirrors Google
+        Admin SDK tokens.list) or to one app with `client_id`. Backs the Unified
+        Single Sign-On `apps` resource.
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: user_id
+          in: query
+          description: Filter to a single directory user's authorized apps
+          schema:
+            type: integer
+        - name: client_id
+          in: query
+          description: Filter to a single app by OAuth client id
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved SSO apps
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+        '400':
+          description: Invalid user_id
+        '401':
+          description: Unauthorized
+
+  /sso-apps/{id}:
+    get:
+      summary: Get a single SSO app authorization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully retrieved SSO app
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SsoApp'
+        '400':
+          description: Invalid SSO app ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: SSO app not found 
