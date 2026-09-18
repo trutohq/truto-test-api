@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@faker-js/faker": "^9.6.0",
-    "hono": "4.7.4",
+    "hono": "4.13.8",
     "lodash-es": "4.17.21",
     "luxon": "3.5.0"
   },
